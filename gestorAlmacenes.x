@@ -57,32 +57,25 @@ program SUPERMERCADO
 
         TDatosAlmacen DatosAlmacen(int pAlmacen) = 1;
 
-
         int NProductos(int pAlmacen) = 2;
 
-
-
         int CrearAlmacen(TDatosAlmacen pDatos) = 3;
-
 
         int AbrirAlmacen(Cadena pNomFiche) = 4;
 
         bool GuardarAlmacen(int pAlmacen) = 5;
 
-
         bool CerrarAlmacen(int pAlmacen) = 6;
 
         bool AlmacenAbierto(int pAlmacen) = 7;
-
 
         int BuscaProducto(TBusProd pBus) = 8;
 
         TProducto ObtenerProducto(TObtProd pPos) = 9;
 
-
         bool AnadirProducto(TActProd pProdNuevo) = 10;
 
-
+        bool ActualizarProducto(TActProd pProd) = 11;
 
         bool EliminarProducto(TBusProd pProduc) = 12;
 

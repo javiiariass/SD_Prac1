@@ -6,108 +6,158 @@
 
 #include "gestorAlmacenes.h"
 
+int menu();
 
-void
-supermercado_1(char *host)
+void supermercado_1(char *host)
 {
 	CLIENT *clnt;
-	TDatosAlmacen  *result_1;
-	int  datosalmacen_1_arg;
-	int  *result_2;
-	int  nproductos_1_arg;
-	int  *result_3;
-	TDatosAlmacen  crearalmacen_1_arg;
-	int  *result_4;
-	char  abriralmacen_1_arg;
-	bool_t  *result_5;
-	int  guardaralmacen_1_arg;
-	bool_t  *result_6;
-	int  cerraralmacen_1_arg;
-	bool_t  *result_7;
-	int  almacenabierto_1_arg;
-	int  *result_8;
-	TBusProd  buscaproducto_1_arg;
-	TProducto  *result_9;
-	TObtProd  obtenerproducto_1_arg;
-	bool_t  *result_10;
-	TActProd  anadirproducto_1_arg;
-	bool_t  *result_11;
-	TBusProd  eliminarproducto_1_arg;
-	TProducto  *result_12;
-	TOperacion  operacion_1_arg;
+	TDatosAlmacen *result_1;
+	int datosalmacen_1_arg;
+	int *result_2;
+	int nproductos_1_arg;
+	int *result_3;
+	TDatosAlmacen crearalmacen_1_arg;
+	int *result_4;
+	char abriralmacen_1_arg;
+	bool_t *result_5;
+	int guardaralmacen_1_arg;
+	bool_t *result_6;
+	int cerraralmacen_1_arg;
+	bool_t *result_7;
+	int almacenabierto_1_arg;
+	int *result_8;
+	TBusProd buscaproducto_1_arg;
+	TProducto *result_9;
+	TObtProd obtenerproducto_1_arg;
+	bool_t *result_10;
+	TActProd anadirproducto_1_arg;
+	bool_t *result_11;
+	TBusProd eliminarproducto_1_arg;
+	TProducto *result_12;
+	TOperacion operacion_1_arg;
 
-#ifndef	DEBUG
-	clnt = clnt_create (host, SUPERMERCADO, SUPERMERCADO_VER, "udp");
-	if (clnt == NULL) {
-		clnt_pcreateerror (host);
-		exit (1);
+#ifndef DEBUG
+	clnt = clnt_create(host, SUPERMERCADO, SUPERMERCADO_VER, "udp");
+	if (clnt == NULL)
+	{
+		clnt_pcreateerror(host);
+		exit(1);
 	}
-#endif	/* DEBUG */
+#endif /* DEBUG */
 
 	result_1 = datosalmacen_1(&datosalmacen_1_arg, clnt);
-	if (result_1 == (TDatosAlmacen *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_1 == (TDatosAlmacen *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_2 = nproductos_1(&nproductos_1_arg, clnt);
-	if (result_2 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_2 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_3 = crearalmacen_1(&crearalmacen_1_arg, clnt);
-	if (result_3 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_3 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_4 = abriralmacen_1(&abriralmacen_1_arg, clnt);
-	if (result_4 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_4 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_5 = guardaralmacen_1(&guardaralmacen_1_arg, clnt);
-	if (result_5 == (bool_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_5 == (bool_t *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_6 = cerraralmacen_1(&cerraralmacen_1_arg, clnt);
-	if (result_6 == (bool_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_6 == (bool_t *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_7 = almacenabierto_1(&almacenabierto_1_arg, clnt);
-	if (result_7 == (bool_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_7 == (bool_t *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_8 = buscaproducto_1(&buscaproducto_1_arg, clnt);
-	if (result_8 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_8 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_9 = obtenerproducto_1(&obtenerproducto_1_arg, clnt);
-	if (result_9 == (TProducto *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_9 == (TProducto *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_10 = anadirproducto_1(&anadirproducto_1_arg, clnt);
-	if (result_10 == (bool_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_10 == (bool_t *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_11 = eliminarproducto_1(&eliminarproducto_1_arg, clnt);
-	if (result_11 == (bool_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_11 == (bool_t *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_12 = operacion_1(&operacion_1_arg, clnt);
-	if (result_12 == (TProducto *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_12 == (TProducto *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
-#ifndef	DEBUG
-	clnt_destroy (clnt);
-#endif	 /* DEBUG */
+#ifndef DEBUG
+	clnt_destroy(clnt);
+#endif /* DEBUG */
 }
 
-
-int
-main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	char *host;
 
-	if (argc < 2) {
-		printf ("usage: %s server_host\n", argv[0]);
-		exit (1);
+	if (argc < 2)
+	{
+		printf("usage: %s server_host\n", argv[0]);
+		exit(1);
 	}
 	host = argv[1];
-	supermercado_1 (host);
-exit (0);
+	supermercado_1(host);
+	exit(0);
+}
+
+int menu(char* almacenActual) {
+    int opcion;
+
+	system("clear");
+
+    
+    printf("\n");
+    printf("****************************************\n");
+    printf("       Menú Almacenes\n");
+    // Mostrar el nombre del almacén actual si existe
+    if (strlen(almacenActual) > 0) {
+        printf("       Almacén actual: %s\n", almacenActual);
+    } else {
+        printf("       Ningún almacén abierto\n");
+    }
+    printf("****************************************\n");
+    printf("1. Crear un almacén vacio.\n");
+    printf("2. Abrir un fichero de almacén.\n");
+    printf("3. Cerrar un almacén.\n");
+    printf("4. Guardar Datos.\n");
+    printf("5. Listar productos del almacén.\n");
+    printf("6. Añadir un producto.\n");
+    printf("7. Actualizar un producto.\n");
+    printf("8. Consultar un producto.\n");
+    printf("9. Eliminar un producto.\n");
+    printf("0. Salir.\n");
+    printf("****************************************\n");
+    printf("Introduce tu opción: ");
+
+    // Leer la opción del usuario
+    scanf("%d", &opcion);
+
+    // Limpiar el buffer del teclado después de leer el entero
+    while (getchar() != '\n');
+
+    return opcion;
 }
