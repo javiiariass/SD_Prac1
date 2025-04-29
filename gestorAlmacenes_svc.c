@@ -102,6 +102,13 @@ supermercado_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		local = (char *(*)(char *, struct svc_req *)) anadirproducto_1_svc;
 		break;
 
+	// Asegúrate de que este case existe (debería ser generado por rpcgen)
+	case ActualizarProducto:
+		_xdr_argument = (xdrproc_t) xdr_TActProd;
+		_xdr_result = (xdrproc_t) xdr_bool;
+		local = (char *(*)(char *, struct svc_req *)) actualizarproducto_1_svc; // Esta línea referencia la función que faltaba
+		break;
+
 	case EliminarProducto:
 		_xdr_argument = (xdrproc_t) xdr_TBusProd;
 		_xdr_result = (xdrproc_t) xdr_bool;

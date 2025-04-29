@@ -138,6 +138,25 @@ eliminarproducto_1_svc(TBusProd *argp, struct svc_req *rqstp)
 	return &result;
 }
 
+// Añadir la implementación de la función faltante
+bool_t *
+actualizarproducto_1_svc(TActProd *argp, struct svc_req *rqstp)
+{
+	static bool_t  result;
+
+	/*
+	 * insert server code here
+	 * Esta función debería buscar el producto por su código dentro del almacén especificado
+	 * y actualizar sus datos con los proporcionados en argp->Producto.
+	 * Devuelve TRUE si se actualizó correctamente, FALSE en caso contrario.
+	 */
+	printf("Llamada a actualizarproducto_1_svc recibida (aún no implementada)\n");
+	// Lógica de ejemplo (marcar como no exitoso por ahora)
+	result = FALSE; 
+
+	return &result;
+}
+
 TProducto *
 operacion_1_svc(TOperacion *argp, struct svc_req *rqstp)
 {
