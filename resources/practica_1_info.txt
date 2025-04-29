@@ -1,0 +1,115 @@
+
+
+**Sistemas Distribuidos Curso 2024/2025**
+
+**PRÁCTICA 1 RPC**
+
+**Enunciado:**
+
+La práctica consiste en el desarrollo e implementación de una aplicación cliente-servidor para la gestión de almacenes de productos[cite: 205].
+
+* Cada cliente gestionará un solo almacén a la vez, pero varios clientes pueden gestionar el mismo almacén simultáneamente[cite: 206].
+* La información de los productos se almacenará y gestionará usando ficheros y memoria dinámica[cite: 207].
+* La gestión se realizará en el servidor mediante invocación de procedimientos remotos (RPC) por los clientes[cite: 215].
+
+**Menú Principal (a implementar en el cliente):**
+
+El cliente debe mostrar el siguiente menú. En el título, debe aparecer el nombre del almacén gestionado o indicar que no hay almacén abierto[cite: 210].
+
+```
+--- Menú Almacenes --- Nombre Almacén
+
+1. Crear un almacén vacio.
+2. Abrir un fichero de almacén.
+3. Cerrar un almacén.
+4. Guardar Datos.
+5. Listar productos del almacén.
+6. Añadir un producto.
+7. Actualizar un producto.
+8. Consultar un producto.
+9. Eliminar un producto.
+0. Salir.
+```
+
+**Funcionalidades de las Opciones del Menú:**
+
+Las gestiones se realizan en el servidor mediante RPCs. Todas las opciones (3 a 9) deben controlar si el almacén está creado y/o cargado, si los productos existen, etc.[cite: 214]. Se debe mostrar el estado de la ejecución (mensaje de error o éxito)[cite: 214].
+
+* **1.- Crear un almacén vacío:** Solicita nombre, dirección y nombre de fichero del almacén[cite: 216]. Verifica que el fichero no exista. Crea un fichero físico vacío y memoria dinámica en el servidor[cite: 217]. Si ya existe, el cliente puede compartirlo[cite: 218].
+* **2.- Abrir un fichero almacén:** Solicita nombre de fichero[cite: 219]. Carga el fichero en memoria en el servidor para su uso[cite: 219]. Si ya estaba cargado, el cliente puede compartirlo[cite: 220].
+* **3.- Cerrar un almacén:** Vuelca la información de memoria dinámica al fichero en el servidor[cite: 221]. Si es compartido, el último cliente en cerrarlo elimina la memoria dinámica[cite: 222].
+* **4.- Guardar Datos:** Vuelca los datos del almacén en memoria al fichero en el servidor[cite: 223].
+* **5.- Listar productos del almacén:** Muestra en pantalla del cliente todos los datos de cada producto del almacén de forma tabular[cite: 224]. Se requiere una cabecera con nombre y dirección del almacén, y otra con los nombres de los campos del producto[cite: 231, 232].
+* **6.- Añadir un producto:** Solicita datos de un producto en el cliente y lo añade a la memoria dinámica del almacén en el servidor si no existe un producto con el mismo código[cite: 225].
+* **7.- Actualizar un producto:** Solicita el producto a actualizar en el cliente[cite: 226]. En el servidor, lo localiza. Por cada campo del producto, muestra el valor actual y pregunta si modificar[cite: 227]. Si se confirma, solicita el nuevo valor[cite: 227]. Actualiza el producto en memoria en el servidor[cite: 228].
+* **8.- Consultar un producto:** Solicita el producto a mostrar en el cliente[cite: 229]. En el servidor, lo localiza y devuelve sus datos para mostrarlos en el cliente[cite: 229]. Los datos deben mostrarse indicando qué son (ej: "Producto: Naranjas, Cantidad: 10")[cite: 231].
+* **9.- Eliminar un producto:** Solicita el producto a eliminar en el cliente[cite: 230]. En el servidor, lo localiza y lo elimina de la memoria dinámica[cite: 230].
+
+**Clases, Tipos de Datos y Formatos de Ficheros:**
+
+Las siguientes definiciones deben usarse (definidas en el archivo `.x` para rpcgen)[cite: 232, 233, 235, 236]:
+
+* `typedef char Cadena [90];`
+* `struct TFecha { int Dia; int Mes; int Anyo; };`
+* `struct TProducto { Cadena CodProd; int Cantidad; Cadena NombreProd; float Precio; Cadena Descripcion; TFecha Caducidad; };`
+* `struct TDatosAlmacen { Cadena Nombre; Cadena Direccion; Cadena Fichero; };`
+* `struct TBusProd { int Almacen; Cadena CodProducto; };` (Usado para buscar/eliminar producto por código en un almacén)
+* `struct TObtProd { int Almacen; int PosProducto; };` (Usado para obtener producto por posición en un almacén)
+* `struct TActProd { int Almacen; TProducto Producto; };` (Usado para añadir/actualizar producto)
+* `struct TOperacion { int p1; Cadena p2; float p3; float p4; };` (No hay que implementarlo por ahora [cite: 256])
+
+**Programa RPC (`gestorAlmacenes.x`):**
+
+Define el programa RPC `SUPERMERCADO` con la versión `SUPERMERCADO_VER`. Cada procedimiento remoto tiene un identificador numérico[cite: 237].
+
+```
+program SUPERMERCADO {
+    version SUPERMERCADO_VER {
+        TDatosAlmacen DatosAlmacen (int pAlmacen) = 1; // Dado una posición del almacén, devuelve sus datos
+        int NProductos (int pAlmacen) = 2; // Dado una posición de almacén, devuelve el número de productos o -1 si no existe [cite: 238]
+        int CrearAlmacen (TDatosAlmacen pDatos) = 3; // Crea un almacén vacio y devuelve la posición donde se encuentra. Si ya estaba creado, devuelve la posición en memoria[cite: 239, 240].
+        int AbrirAlmacen (Cadena pNomFiche) = 4; // Abre un fichero de almacén, lo carga en memoria y devuelve su posición. Si ya estaba cargado, devuelve la posición en memoria[cite: 241, 242].
+        bool GuardarAlmacen (int palmacen) = 5; // Dado la posición de un almacén vuelca sus datos al fichero. Devuelve true si ha podido guardarlo[cite: 243].
+        bool CerrarAlmacen (int pAlmacen) = 6; // Vuelca datos al fichero y elimina la memoria dinámica. Si es compartido, solo el último cliente elimina la memoria[cite: 245, 246].
+        bool AlmacenAbierto (int pAlmacen) = 7; // Dado la posición del almacén devuelve true si está cargado en memoria[cite: 247].
+        int BuscaProducto (TBusProd Bus) = 8; // Dado posición almacén y código producto, devuelve la posición en el vector dinámico. -1 si no lo encuentra[cite: 248].
+        TProducto ObtenerProducto (TObtProd pPos) = 9; // Dado posición almacén y producto, lo devuelve[cite: 249].
+        bool AnadirProducto (TActProd pProdNuevo) = 10; // Dado posición almacén y producto, lo añade a memoria dinámica. true si éxito. No puede haber dos productos con el mismo código[cite: 250, 251].
+        bool ActualizarProducto (TActProd pProd) = 11; // Dado posición almacén y producto, lo actualiza en memoria dinámica. true si producto existe y actualizado[cite: 252, 253].
+        bool EliminarProducto (TBusProd pProduc) = 12; // Dado posición almacén y código producto, lo elimina de memoria dinámica. true si éxito[cite: 255].
+        TProducto operacion (TOperacion) = 13; // No hay que implementarlo por ahora [cite: 256]
+    } = 1; // Versión 1
+} = 0x30000001; // Número de programa RPC
+```
+
+**Estructura de Datos para Almacenar en Memoria Dinámica (en el servidor):**
+
+Se sugiere una estructura para almacenar los almacenes en un vector dinámico en el servidor[cite: 257]:
+
+```c
+typedef struct {
+    Cadena NombreA, DireccionA, NombreFile; // Datos del almacén
+    TProducto *Productos; // Vector dinámico de productos [cite: 257]
+    int NProduc; // Número de productos [cite: 257]
+    int NClientes; // Número de clientes que comparten el almacén [cite: 258]
+} TAlmacen;
+
+TAlmacen *Almacenes = NULL; // Vector dinámico de Almacenes [cite: 259]
+int NAlmacenes = 0; // Número de Almacenes [cite: 259]
+```
+
+Nota: Cuando un almacén es eliminado (no hay clientes), su posición en el vector dinámico `Almacenes` puede ser reutilizada[cite: 259].
+
+**Ficheros de la Aplicación:**
+
+Se proporciona un fichero de ejemplo (`Almacen.dat`) con datos[cite: 260]. La estructura de este fichero es[cite: 261, 263, 264]:
+
+* **Cabecera:** Número de Productos, Nombre Almacén, Dirección Almacén[cite: 263].
+* **Productos:** A continuación de la cabecera, una secuencia de estructuras `TProducto`[cite: 264].
+
+El fichero `Almacen.dat` es un fichero binario.
+
+**Realización de la Práctica:**
+
+La práctica puede ser individual o en grupos de dos[cite: 268, 269]. Se debe notificar al profesor los componentes y el reparto de tareas[cite: 269].
+
