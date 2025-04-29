@@ -4,12 +4,22 @@
  * as a guideline for developing your own functions.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "gestorAlmacenes.h"
 
-int menu();
+// Variable global para el nombre del almacén actual
+char nombre_almacen_actual[90] = "";
 
-void supermercado_1(char *host)
+// Declaración de la función mostrar_menu
+int mostrar_menu();
+
+// Función supermercado_1 generada por rpcgen, comentada ya que no se usará directamente.
+void
+supermercado_1(char *host)
 {
+	/*
 	CLIENT *clnt;
 	TDatosAlmacen *result_1;
 	int datosalmacen_1_arg;
@@ -18,7 +28,7 @@ void supermercado_1(char *host)
 	int *result_3;
 	TDatosAlmacen crearalmacen_1_arg;
 	int *result_4;
-	char abriralmacen_1_arg;
+	char abriralmacen_1_arg; // Debería ser Cadena? Revisar tipo original
 	bool_t *result_5;
 	int guardaralmacen_1_arg;
 	bool_t *result_6;
@@ -31,88 +41,39 @@ void supermercado_1(char *host)
 	TObtProd obtenerproducto_1_arg;
 	bool_t *result_10;
 	TActProd anadirproducto_1_arg;
-	bool_t *result_11;
+	bool_t *result_11; // Falta la llamada a ActualizarProducto
 	TBusProd eliminarproducto_1_arg;
-	TProducto *result_12;
+	TProducto *result_12; // Corresponde a operacion_1
 	TOperacion operacion_1_arg;
 
+
 #ifndef DEBUG
-	clnt = clnt_create(host, SUPERMERCADO, SUPERMERCADO_VER, "udp");
+	clnt = clnt_create(host, SUPERMERCADO, SUPERMERCADO_VER, "udp"); // Originalmente UDP
 	if (clnt == NULL)
 	{
 		clnt_pcreateerror(host);
 		exit(1);
 	}
-#endif /* DEBUG */
+#endif // DEBUG //
 
-	result_1 = datosalmacen_1(&datosalmacen_1_arg, clnt);
-	if (result_1 == (TDatosAlmacen *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_2 = nproductos_1(&nproductos_1_arg, clnt);
-	if (result_2 == (int *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_3 = crearalmacen_1(&crearalmacen_1_arg, clnt);
-	if (result_3 == (int *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_4 = abriralmacen_1(&abriralmacen_1_arg, clnt);
-	if (result_4 == (int *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_5 = guardaralmacen_1(&guardaralmacen_1_arg, clnt);
-	if (result_5 == (bool_t *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_6 = cerraralmacen_1(&cerraralmacen_1_arg, clnt);
-	if (result_6 == (bool_t *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_7 = almacenabierto_1(&almacenabierto_1_arg, clnt);
-	if (result_7 == (bool_t *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_8 = buscaproducto_1(&buscaproducto_1_arg, clnt);
-	if (result_8 == (int *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_9 = obtenerproducto_1(&obtenerproducto_1_arg, clnt);
-	if (result_9 == (TProducto *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_10 = anadirproducto_1(&anadirproducto_1_arg, clnt);
-	if (result_10 == (bool_t *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_11 = eliminarproducto_1(&eliminarproducto_1_arg, clnt);
-	if (result_11 == (bool_t *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
-	result_12 = operacion_1(&operacion_1_arg, clnt);
-	if (result_12 == (TProducto *)NULL)
-	{
-		clnt_perror(clnt, "call failed");
-	}
+	// ... llamadas RPC de ejemplo originales ...
+	// result_1 = datosalmacen_1(&datosalmacen_1_arg, clnt);
+	// ... etc ...
+
 #ifndef DEBUG
 	clnt_destroy(clnt);
-#endif /* DEBUG */
+#endif // DEBUG //
+	*/
 }
 
+// Función principal del cliente
 int main(int argc, char *argv[])
 {
 	char *host;
+	CLIENT *clnt;
+	int opcion;
+	// Variable para almacenar el ID del almacén actual gestionado por este cliente
+	int id_almacen_actual = -1; // -1 indica que no hay almacén abierto
 
 	if (argc < 2)
 	{
@@ -120,24 +81,113 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	host = argv[1];
-	supermercado_1(host);
+
+	// Crear cliente RPC usando TCP
+#ifndef DEBUG
+	clnt = clnt_create(host, SUPERMERCADO, SUPERMERCADO_VER, "tcp"); // Cambiado a TCP
+	if (clnt == NULL)
+	{
+		clnt_pcreateerror(host);
+		exit(1);
+	}
+#endif /* DEBUG */
+
+	do
+	{
+		opcion = mostrar_menu();
+
+		switch (opcion)
+		{
+		case 1:
+			printf("Has elegido: Crear un almacén vacio\n");
+			// Aquí irán las llamadas RPC correspondientes
+			// Ejemplo: Llamar a una función local que pida datos y llame a crearalmacen_1
+			break;
+		case 2:
+			printf("Has elegido: Abrir un fichero de almacén\n");
+			// Aquí irán las llamadas RPC correspondientes
+			// Ejemplo: Llamar a una función local que pida nombre fichero y llame a abriralmacen_1
+			break;
+		case 3:
+			printf("Has elegido: Cerrar un almacén\n");
+			// Aquí irán las llamadas RPC correspondientes
+			// Ejemplo: Llamar a cerraralmacen_1 si id_almacen_actual != -1
+			break;
+		case 4:
+			printf("Has elegido: Guardar Datos\n");
+			// Aquí irán las llamadas RPC correspondientes
+			// Ejemplo: Llamar a guardaralmacen_1 si id_almacen_actual != -1
+			break;
+		case 5:
+			printf("Has elegido: Listar productos del almacén\n");
+			// Aquí irán las llamadas RPC correspondientes
+			// Ejemplo: Llamar a nproductos_1 y luego bucle con obtenerproducto_1
+			break;
+		case 6:
+			printf("Has elegido: Añadir un producto\n");
+			// Aquí irán las llamadas RPC correspondientes
+			// Ejemplo: Llamar a una función local que pida datos producto y llame a anadirproducto_1
+			break;
+		case 7:
+			printf("Has elegido: Actualizar un producto\n");
+			// Aquí irán las llamadas RPC correspondientes
+			// Ejemplo: Llamar a una función local que pida código, busque, pida nuevos datos y llame a actualizarproducto_1
+			break;
+		case 8:
+			printf("Has elegido: Consultar un producto\n");
+			// Aquí irán las llamadas RPC correspondientes
+			// Ejemplo: Llamar a una función local que pida código, llame a buscaproducto_1 y obtenerproducto_1
+			break;
+		case 9:
+			printf("Has elegido: Eliminar un producto\n");
+			// Aquí irán las llamadas RPC correspondientes
+			// Ejemplo: Llamar a una función local que pida código y llame a eliminarproducto_1
+			break;
+		case 0:
+			printf("Saliendo del programa...\n");
+			// Considerar cerrar el almacén si está abierto antes de salir?
+			// if (id_almacen_actual != -1) { /* llamar a cerraralmacen_1 */ }
+			break;
+		default:
+			printf("Opción no válida. Inténtalo de nuevo.\n");
+			break;
+		}
+
+		// Pausa antes de volver a mostrar el menú (excepto si se elige salir)
+		if (opcion != 0)
+		{
+			printf("\nPulsa Enter para continuar...");
+			// Consumir el Enter pendiente del scanf anterior y esperar nuevo Enter
+			// while (getchar() != '\n'); // Limpia buffer si quedó algo
+			fflush(stdin); // Limpiamos buffer 
+			getchar(); // Espera el Enter del usuario
+			
+		}
+
+	} while (opcion != 0);
+
+#ifndef DEBUG
+	clnt_destroy(clnt);
+#endif /* DEBUG */
+
 	exit(0);
 }
 
-int menu(char* almacenActual) {
+
+// Definición de la función mostrar_menu
+int mostrar_menu() {
     int opcion;
 
-	system("clear");
+	// Limpiar pantalla 
+	system("clear"); 
 
-    
     printf("\n");
     printf("****************************************\n");
-    printf("       Menú Almacenes\n");
     // Mostrar el nombre del almacén actual si existe
-    if (strlen(almacenActual) > 0) {
-        printf("       Almacén actual: %s\n", almacenActual);
+    if (strlen(nombre_almacen_actual) > 0) {
+        printf("--- Menú Almacenes --- %s ---\n", nombre_almacen_actual);
     } else {
-        printf("       Ningún almacén abierto\n");
+        printf("--- Menú Almacenes --- (Ningún almacén abierto) ---\n");
     }
     printf("****************************************\n");
     printf("1. Crear un almacén vacio.\n");
@@ -154,10 +204,16 @@ int menu(char* almacenActual) {
     printf("Introduce tu opción: ");
 
     // Leer la opción del usuario
-    scanf("%d", &opcion);
+    // Validar que se introduce un entero
+    while (scanf("%d", &opcion) != 1) {
+        printf("Entrada inválida. Introduce un número: ");
+        // Limpiar el buffer de entrada
+        //        while (getchar() != '\n');
+        fflush(stdin);
+    }
 
-    // Limpiar el buffer del teclado después de leer el entero
-    while (getchar() != '\n');
+    // Limpiar el buffer del teclado después de leer el entero correctamente
+    fflush(stdin);
 
     return opcion;
 }
