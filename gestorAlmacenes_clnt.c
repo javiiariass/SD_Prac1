@@ -160,6 +160,21 @@ anadirproducto_1(TActProd *argp, CLIENT *clnt)
 }
 
 bool_t *
+actualizarproducto_1(TActProd *argp, CLIENT *clnt)
+{
+	static bool_t clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, ActualizarProducto,
+		(xdrproc_t) xdr_TActProd, (caddr_t) argp,
+		(xdrproc_t) xdr_bool, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
+bool_t *
 eliminarproducto_1(TBusProd *argp, CLIENT *clnt)
 {
 	static bool_t clnt_res;

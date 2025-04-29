@@ -100,6 +100,9 @@ extern  TProducto * obtenerproducto_1_svc(TObtProd *, struct svc_req *);
 #define AnadirProducto 10
 extern  bool_t * anadirproducto_1(TActProd *, CLIENT *);
 extern  bool_t * anadirproducto_1_svc(TActProd *, struct svc_req *);
+#define ActualizarProducto 11
+extern  bool_t * actualizarproducto_1(TActProd *, CLIENT *);
+extern  bool_t * actualizarproducto_1_svc(TActProd *, struct svc_req *);
 #define EliminarProducto 12
 extern  bool_t * eliminarproducto_1(TBusProd *, CLIENT *);
 extern  bool_t * eliminarproducto_1_svc(TBusProd *, struct svc_req *);
@@ -139,6 +142,9 @@ extern  TProducto * obtenerproducto_1_svc();
 #define AnadirProducto 10
 extern  bool_t * anadirproducto_1();
 extern  bool_t * anadirproducto_1_svc();
+#define ActualizarProducto 11
+extern  bool_t * actualizarproducto_1();
+extern  bool_t * actualizarproducto_1_svc();
 #define EliminarProducto 12
 extern  bool_t * eliminarproducto_1();
 extern  bool_t * eliminarproducto_1_svc();
