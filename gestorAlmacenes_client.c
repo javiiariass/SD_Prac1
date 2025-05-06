@@ -205,17 +205,20 @@ int mostrar_menu() {
 
     // Leer la opción del usuario
     // Validar que se introduce un entero
-    while (scanf("%d", &opcion) != 1) { // Nos aseguramos que la entrada sea correcta
+    while (scanf("%d", &opcion) != 1 || opcion < 0 || opcion > 9) { 
+		// Nos aseguramos que la entrada sea correcta y este en rango
         printf("Entrada inválida. Introduce un número: ");
         // Limpiar el buffer de entrada
         int aux;
         while ((aux = getchar()) != '\n' && aux != EOF);
 		
+		// No optimo en linux
+		//fflush(stdin);
         
     }
 
     // Limpiar el buffer del teclado después de leer el entero correctamente
-    fflush(stdin);
+    
 
     return opcion;
 }
