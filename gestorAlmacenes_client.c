@@ -7,17 +7,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// Para resolver el error "rpc/rpc.h no encontrado" (una dependencia de gestorAlmacenes.h):
+// Asegúrese de que la ruta de inclusión de su compilador apunte a los encabezados de la biblioteca RPC
+// (por ejemplo, de libtirpc). Esto es una configuración del entorno de compilación.
 #include "gestorAlmacenes.h"
 
 // Variable global para el nombre del almacén actual
 char nombre_almacen_actual[90] = "";
 
+
+
+
 // Declaración de la función mostrar_menu
 int mostrar_menu();
 
+// Método que limpia buffer de teclado
+void limpiaBuffer();
+
 // Función supermercado_1 generada por rpcgen, comentada ya que no se usará directamente.
-void
-supermercado_1(char *host)
+void supermercado_1(char *host)
 {
 	/*
 	CLIENT *clnt;
@@ -100,13 +108,68 @@ int main(int argc, char *argv[])
 		{
 		case 1:
 			printf("Has elegido: Crear un almacén vacio\n");
-			// Aquí irán las llamadas RPC correspondientes
-			// Ejemplo: Llamar a una función local que pida datos y llame a crearalmacen_1
+			if (id_almacen_actual != -1)
+			{
+				printf("Error: Ya hay un almacén abierto (%s). Ciérralo primero.\n",
+					   nombre_almacen_actual);
+				break;
+			}
+
+			TDatosAlmacen nuevo_almacen_datos;
+			
+
+			// Solicitar datos al usuario
+			printf("Introduce el nombre del almacén: ");
+			// fgets(nuevo_almacen_datos.Nombre, sizeof(nuevo_almacen_datos.Nombre), stdin);
+			// nuevo_almacen_datos.Nombre[strcspn(nuevo_almacen_datos.Nombre, "\n")] = '\0';
+			scanf("%s",nuevo_almacen_datos.Nombre);
+
+			printf("Introduce la dirección del almacén: ");
+			fgets(nuevo_almacen_datos.Direccion, sizeof(nuevo_almacen_datos.Direccion), stdin);
+			nuevo_almacen_datos.Direccion[strcspn(nuevo_almacen_datos.Direccion, "\n")] = '\0';
+
+			printf("Introduce el nombre del fichero para el almacén (ej: mi_almacen.dat): ");
+			fgets(nuevo_almacen_datos.Fichero, sizeof(nuevo_almacen_datos.Fichero), stdin);
+			nuevo_almacen_datos.Fichero[strcspn(nuevo_almacen_datos.Fichero, "\n")] = '\0';
+
+			// Llamada RPC
+			int *resultado_rpc = crearalmacen_1(&nuevo_almacen_datos, clnt);
+			if (resultado_rpc == NULL)
+			{
+				clnt_perror(clnt, "Error RPC CrearAlmacen");
+			}
+			else
+			{
+				int id_obtenido = *resultado_rpc;
+				if (id_obtenido == -1)
+				{
+					printf("Error en el servidor al crear el almacén. Comprueba permisos y espacio.\n");
+				}
+				else if (id_obtenido == -2)
+				{
+					printf("El fichero '%s' ya existe. Usa la opción 'Abrir un fichero de almacén'.\n",
+						   nuevo_almacen_datos.Fichero);
+				}
+				else
+				{
+					// Éxito: actualizar estado cliente
+					id_almacen_actual = id_obtenido;
+					strncpy(nombre_almacen_actual,
+							nuevo_almacen_datos.Nombre,
+							sizeof(nombre_almacen_actual) - 1);
+					nombre_almacen_actual[sizeof(nombre_almacen_actual) - 1] = '\0';
+					printf("Almacén '%s' creado/abierto con éxito. ID: %d\n",
+						   nombre_almacen_actual, id_almacen_actual);
+				}
+			}
+
 			break;
-		case 2:
+		case 2:{
 			printf("Has elegido: Abrir un fichero de almacén\n");
 			// Aquí irán las llamadas RPC correspondientes
 			// Ejemplo: Llamar a una función local que pida nombre fichero y llame a abriralmacen_1
+		}
+			
 			break;
 		case 3:
 			printf("Has elegido: Cerrar un almacén\n");
@@ -159,9 +222,8 @@ int main(int argc, char *argv[])
 			printf("\nPulsa Enter para continuar...");
 			// Consumir el Enter pendiente del scanf anterior y esperar nuevo Enter
 			// while (getchar() != '\n'); // Limpia buffer si quedó algo
-			fflush(stdin); // Limpiamos buffer 
-			getchar(); // Espera el Enter del usuario
-			
+			fflush(stdin); // Limpiamos buffer
+			getchar();	   // Espera el Enter del usuario
 		}
 
 	} while (opcion != 0);
@@ -173,52 +235,76 @@ int main(int argc, char *argv[])
 	exit(0);
 }
 
+/**
+ * Función para mostrar el menú de opciones al usuario.
+ * Permite seleccionar diferentes acciones relacionadas con el almacén.
+ * 
+ * Controla errores relacionados con teclas incorrectas. 
+ * Solo devuelve opciones válidas
+ * 
+ * @return int Opción seleccionada por el usuario.
+ */
+int mostrar_menu()
+{
+	int opcion;
 
-// Definición de la función mostrar_menu
-int mostrar_menu() {
-    int opcion;
+	// Limpiar pantalla
+	system("clear");
 
-	// Limpiar pantalla 
-	system("clear"); 
+	printf("\n");
+	printf("****************************************\n");
+	// Mostrar el nombre del almacén actual si existe
+	if (strlen(nombre_almacen_actual) > 0)
+	{
+		printf("--- Menú Almacenes --- %s ---\n", nombre_almacen_actual);
+	}
+	else
+	{
+		printf("--- Menú Almacenes --- (Ningún almacén abierto) ---\n");
+	}
+	printf("****************************************\n");
+	printf("1. Crear un almacén vacio.\n");
+	printf("2. Abrir un fichero de almacén.\n");
+	printf("3. Cerrar un almacén.\n");
+	printf("4. Guardar Datos.\n");
+	printf("5. Listar productos del almacén.\n");
+	printf("6. Añadir un producto.\n");
+	printf("7. Actualizar un producto.\n");
+	printf("8. Consultar un producto.\n");
+	printf("9. Eliminar un producto.\n");
+	printf("0. Salir.\n");
+	printf("****************************************\n");
+	printf("Introduce tu opción: ");
 
-    printf("\n");
-    printf("****************************************\n");
-    // Mostrar el nombre del almacén actual si existe
-    if (strlen(nombre_almacen_actual) > 0) {
-        printf("--- Menú Almacenes --- %s ---\n", nombre_almacen_actual);
-    } else {
-        printf("--- Menú Almacenes --- (Ningún almacén abierto) ---\n");
-    }
-    printf("****************************************\n");
-    printf("1. Crear un almacén vacio.\n");
-    printf("2. Abrir un fichero de almacén.\n");
-    printf("3. Cerrar un almacén.\n");
-    printf("4. Guardar Datos.\n");
-    printf("5. Listar productos del almacén.\n");
-    printf("6. Añadir un producto.\n");
-    printf("7. Actualizar un producto.\n");
-    printf("8. Consultar un producto.\n");
-    printf("9. Eliminar un producto.\n");
-    printf("0. Salir.\n");
-    printf("****************************************\n");
-    printf("Introduce tu opción: ");
-
-    // Leer la opción del usuario
-    // Validar que se introduce un entero
-    while (scanf("%d", &opcion) != 1 || opcion < 0 || opcion > 9) { 
+	// Leer la opción del usuario
+	// Validar que se introduce un entero dentro del rango "correcto"
+	while (scanf("%d", &opcion) != 1 || opcion < 0 || opcion > 9) //scanf devuelve 1 si la entrada es correcta
+	{
 		// Nos aseguramos que la entrada sea correcta y este en rango
-        printf("Entrada inválida. Introduce un número: ");
-        // Limpiar el buffer de entrada
-        int aux;
-        while ((aux = getchar()) != '\n' && aux != EOF);
-		
-		// No optimo en linux
-		//fflush(stdin);
-        
-    }
+		printf("Entrada inválida. Introduce un número válido: ");
+		// Limpiar el buffer de entrada
+		int aux;
+		limpiaBuffer();
+			
+			
 
-    // Limpiar el buffer del teclado después de leer el entero correctamente
-    
+		// No sirve en linux 
+		// fflush(stdin);
+	}
 
-    return opcion;
+	// Limpiar el buffer del teclado después de leer el entero correctamente
+	limpiaBuffer();
+
+	return opcion;
+}
+
+
+/**
+ * Función para limpiar el buffer de entrada.
+ * Elimina cualquier carácter sobrante hasta el final de la línea.
+ */
+void limpiaBuffer()
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) { }
 }

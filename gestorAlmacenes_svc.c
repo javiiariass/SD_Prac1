@@ -106,7 +106,6 @@ supermercado_1(struct svc_req *rqstp, register SVCXPRT *transp)
 	case ActualizarProducto:
 		_xdr_argument = (xdrproc_t) xdr_TActProd;
 		_xdr_result = (xdrproc_t) xdr_bool;
-		local = (char *(*)(char *, struct svc_req *)) actualizarproducto_1_svc; 
 		local = (char *(*)(char *, struct svc_req *)) actualizarproducto_1_svc;
 		break;
 
