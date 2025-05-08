@@ -120,9 +120,10 @@ int main(int argc, char *argv[])
 
 			// Solicitar datos al usuario
 			printf("Introduce el nombre del almacén: ");
-			// fgets(nuevo_almacen_datos.Nombre, sizeof(nuevo_almacen_datos.Nombre), stdin);
-			// nuevo_almacen_datos.Nombre[strcspn(nuevo_almacen_datos.Nombre, "\n")] = '\0';
-			scanf("%s",nuevo_almacen_datos.Nombre);
+			fgets(nuevo_almacen_datos.Nombre, sizeof(nuevo_almacen_datos.Nombre), stdin);
+			nuevo_almacen_datos.Nombre[strcspn(nuevo_almacen_datos.Nombre, "\n")] = '\0';
+			// con scanf solo conseguimos la primera cadena antes del espacio
+			//scanf("%s",nuevo_almacen_datos.Nombre); 
 
 			printf("Introduce la dirección del almacén: ");
 			fgets(nuevo_almacen_datos.Direccion, sizeof(nuevo_almacen_datos.Direccion), stdin);

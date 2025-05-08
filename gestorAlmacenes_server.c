@@ -6,6 +6,18 @@
 
 #include "gestorAlmacenes.h"
 
+/**
+ * Estructura que representa un almacén.
+ */
+typedef struct {
+    //Cadena NombreA, DireccionA, NombreFile; // Datos del almacén
+    TDatosAlmacen almacen;
+	TProducto *Productos; // Vector dinámico de productos
+    int NProduc; // Número de productos
+    int NClientes; // Número de clientes que comparten el almacén
+} TAlmacen;
+
+
 TDatosAlmacen *
 datosalmacen_1_svc(int *argp, struct svc_req *rqstp)
 {
@@ -33,12 +45,42 @@ nproductos_1_svc(int *argp, struct svc_req *rqstp)
 int *
 crearalmacen_1_svc(TDatosAlmacen *argp, struct svc_req *rqstp)
 {
-	static int  result;
+	static int result;
+	// Inicializar el resultado como -1 (error por defecto)
+	result = -1;
 
-	/*
-	 * insert server code here
-	 */
+	// Verificar si el archivo ya existe
+	FILE *file = fopen(argp->Fichero, "rb");
+	if (file != NULL)
+	{
+		// El archivo ya existe, devolver -2
+		fclose(file);
+		result = -2;
+		return &result;
+	}
 
+	// Crear un nuevo archivo vacío
+	file = fopen(argp->Fichero, "wb");
+	if (file == NULL)
+	{
+		// Error al crear el archivo
+		perror("Error al crear el archivo");
+		return &result;
+	}
+
+	// Escribir la cabecera del almacén en el archivo
+	int nProductos = 0; // Inicialmente no hay productos
+	fwrite(&nProductos, sizeof(int), 1, file);
+	fwrite(argp->Nombre, sizeof(Cadena), 1, file);
+	fwrite(argp->Direccion, sizeof(Cadena), 1, file);
+
+	// Cerrar el archivo
+	fclose(file);
+
+	// Asignar un ID ficticio al almacén (por ejemplo, 0 para el primer almacén)
+	result = 0;
+
+	printf("Almacén '%s' creado con éxito en el servidor.\n", argp->Nombre);
 	return &result;
 }
 
