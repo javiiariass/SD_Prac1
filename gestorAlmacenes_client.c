@@ -13,7 +13,7 @@
 #include "gestorAlmacenes.h"
 
 // Variable global para el nombre del almacén actual
-char nombre_almacen_actual[90] = "";
+Cadena nombre_almacen_actual = "";
 
 
 
@@ -144,12 +144,7 @@ int main(int argc, char *argv[])
 				int id_obtenido = *resultado_rpc;
 				if (id_obtenido == -1)
 				{
-					printf("Error en el servidor al crear el almacén. Comprueba permisos y espacio.\n");
-				}
-				else if (id_obtenido == -2)
-				{
-					printf("El fichero '%s' ya existe. Usa la opción 'Abrir un fichero de almacén'.\n",
-						   nuevo_almacen_datos.Fichero);
+					printf("Error en el servidor al crear el almacén.\n");
 				}
 				else
 				{
@@ -167,8 +162,50 @@ int main(int argc, char *argv[])
 			break;
 		case 2:{
 			printf("Has elegido: Abrir un fichero de almacén\n");
-			// Aquí irán las llamadas RPC correspondientes
-			// Ejemplo: Llamar a una función local que pida nombre fichero y llame a abriralmacen_1
+			if (id_almacen_actual != -1)
+			{
+				printf("Error: Ya hay un almacén abierto (%s). Ciérralo primero.\n",
+					   nombre_almacen_actual);
+				break;
+			}
+
+			TDatosAlmacen nuevo_almacen_datos;
+			
+
+			// Solicitar datos al usuario
+			Cadena datoFichero;
+			
+			printf("Introduce el nombre del fichero para el almacén (ej: mi_almacen.dat): ");
+			fgets(datoFichero, sizeof(datoFichero), stdin);
+			datoFichero[strcspn(datoFichero, "\n")] = '\0';
+
+			// Llamada RPC
+			int *resultado_rpc = abriralmacen_1(datoFichero, clnt);
+			if (resultado_rpc == NULL)
+			{
+				clnt_perror(clnt, "Error RPC CrearAlmacen");
+			}
+			else
+			{
+				int id_obtenido = *resultado_rpc;
+				if (id_obtenido == -1)
+				{
+					printf("Error en el servidor al crear el almacén.\n");
+				}
+				else
+				{
+					// Leer datos almacen para nombre.
+					// Éxito: actualizar estado cliente
+					id_almacen_actual = id_obtenido;
+					strncpy(nombre_almacen_actual,
+							nuevo_almacen_datos.Nombre,
+							sizeof(nombre_almacen_actual) - 1);
+					nombre_almacen_actual[sizeof(nombre_almacen_actual) - 1] = '\0';
+					printf("Almacén '%s' creado/abierto con éxito. ID: %d\n",
+						   nombre_almacen_actual, id_almacen_actual);
+				}
+			}
+			
 		}
 			
 			break;

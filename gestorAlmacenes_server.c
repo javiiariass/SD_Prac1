@@ -6,16 +6,346 @@
 
 #include "gestorAlmacenes.h"
 
+
+
+
+
+
+// Variables globales para gestionar los almacenes cargados en memoria
+TAlmacen *Almacenes;// = NULL; // Vector dinámico de almacenes
+int NAlmacenes; //= 0; // Número actual de almacenes cargados en memoria
+
+// **************************** Funciones extra ****************************
+
 /**
- * Estructura que representa un almacén.
+ * Libera la memoria dinámica utilizada por los almacenes y sus productos.
+ * Se debe llamar a esta función antes de finalizar el programa para evitar fugas de memoria.
  */
-typedef struct {
-    //Cadena NombreA, DireccionA, NombreFile; // Datos del almacén
-    TDatosAlmacen almacen;
-	TProducto *Productos; // Vector dinámico de productos
-    int NProduc; // Número de productos
-    int NClientes; // Número de clientes que comparten el almacén
-} TAlmacen;
+void liberarMemoria() {
+    for (int i = 0; i < NAlmacenes; i++) {
+        // Liberar el vector de productos del almacén
+        if (Almacenes[i].Productos != NULL) {
+            free(Almacenes[i].Productos);
+        }
+    }
+    // Liberar el vector de almacenes
+    if (Almacenes != NULL) {
+        free(Almacenes);
+    }
+
+	NAlmacenes = 0;
+    printf("Memoria dinámica liberada correctamente.\n");
+}
+
+
+/**
+ * Esta función busca un almacén en memoria que coincida con el fichero(.dat) del puntero pasado por parametro.
+ * 
+ * @param fich Puntero a la estructura que contiene los datos del almacén a buscar.
+ * @return Índice del almacén si se encuentra, -1 si no se encuentra.
+ */
+int buscaAlmacen(TDatosAlmacen *fich){
+	for (int i = 0; i < NAlmacenes; i++) {
+		if (strcmp(Almacenes[i].almacen.Fichero, fich->Fichero) == 0) {
+			// Incrementar el contador de clientes y compartir el almacén
+			return i;
+		}
+	}
+	return -1;
+}
+
+/**
+ * Verifica si un archivo existe en el sistema (Indicar extension archivo).
+ * 
+ * @param nombreArchivo Nombre del archivo a comprobar. (Con extensión .dat)
+ * @return 1 si el archivo existe, 0 si no existe.
+ */
+int archivoExiste(const char *nombreArchivo) {
+    FILE *file = fopen(nombreArchivo, "rb");
+    if (file != NULL) {
+        fclose(file);
+        return 1; // El archivo existe
+    }
+    return 0; // El archivo no existe
+}
+
+/**
+ * Esta función crea un archivo vacío para almacenar los datos del almacén.
+ * Se inicializa con una cabecera que contiene el número de productos y los datos del almacén.
+ * 
+ * @param nombreArchivo Nombre del archivo a crear. (Con extensión .dat)
+ * @param datosAlmacen Puntero a la estructura que contiene los datos del almacén.
+ * @return 0 si el archivo fue creado con éxito, -1 si hubo un error.
+ */
+int crearArchivoVacio(const char *nombreArchivo, const TDatosAlmacen *datosAlmacen) {
+    FILE *file = fopen(nombreArchivo, "wb");
+    if (file == NULL) {
+        perror("Error al crear el archivo");
+        return -1; // Error al crear el archivo
+    }
+
+    // Escribir la cabecera del almacén en el archivo
+    int nProductos = 0; // Inicialmente no hay productos
+    fwrite(&nProductos, sizeof(int), 1, file);
+    fwrite(datosAlmacen->Nombre, sizeof(Cadena), 1, file);
+    fwrite(datosAlmacen->Direccion, sizeof(Cadena), 1, file);
+
+    fclose(file);
+    return 0; // Archivo creado con éxito
+}
+
+/**
+ * Esta función actualiza el fichero del almacén especificado por su índice.
+ * Se asegura de que el índice sea válido y escribe los datos del almacén y sus productos en el archivo.
+ * 
+ * @param indiceAlmacen Índice del almacén a actualizar.
+ * @return 0 si la actualización fue exitosa, -1 si hubo un error.
+ */
+int actualizarFicheroAlmacen(int indiceAlmacen) {
+    if (indiceAlmacen < 0 || indiceAlmacen >= NAlmacenes) {
+        fprintf(stderr, "Error: Índice de almacén inválido.\n");
+        return -1; // Índice inválido
+    }
+
+    TAlmacen *almacen = &Almacenes[indiceAlmacen];
+    // Comprobamos si el archivo existe(si no existe no deberíamos crearlo. Estamos actualizando)
+	if (archivoExiste(almacen->almacen.Fichero) == 0) {
+        fprintf(stderr, "Error al actualizar: El archivo no existe.\n");
+        return -1;
+    }
+    FILE *file = fopen(almacen->almacen.Fichero, "wb");
+    if (file == NULL) {
+        perror("Error al abrir el fichero para actualizar");
+        return -1; // Error al abrir el fichero
+    }
+
+    // Escribir el número de productos
+    fwrite(&almacen->NProduc, sizeof(int), 1, file);
+
+    // Escribir los datos del almacén
+    fwrite(almacen->almacen.Nombre, sizeof(Cadena), 1, file);
+    fwrite(almacen->almacen.Direccion, sizeof(Cadena), 1, file);
+
+    // Escribe bloques de tamaño TProducto la cantidad especificada por NProduc
+    if (almacen->Productos != NULL) {
+        fwrite(almacen->Productos, sizeof(TProducto), almacen->NProduc, file);		
+    }
+
+    fclose(file);
+    printf("Fichero del almacén '%s' actualizado correctamente.\n", almacen->almacen.Fichero);
+    return 0; // Éxito
+}
+
+// Modificar la función para usar archivoExiste
+int cargarDatosDesdeFichero(const char *nombreArchivo, TAlmacen *almacen) {
+    
+	
+	// Intentamos abrir el archivo (ya comprueba si existe)
+    FILE *file = fopen(nombreArchivo, "rb");
+    if (file == NULL) { 
+        
+		perror("Error al abrir el archivo");
+        return -1; // Error al abrir el archivo
+    }
+
+    // Leer el número de productos
+    if (fread(&almacen->NProduc, sizeof(int), 1, file) != 1) {
+        
+		perror("Error al leer el número de productos");
+        fclose(file);
+        return -1;
+    }
+
+    // Leer los datos del almacén
+    if (fread(almacen->almacen.Nombre, sizeof(Cadena), 1, file) != 1 ||
+        fread(almacen->almacen.Direccion, sizeof(Cadena), 1, file) != 1) {
+        
+		perror("Error al leer los datos del almacén");
+        fclose(file);
+        return -1;
+    }
+
+    // Reservar memoria para los productos si hay alguno
+    if (almacen->NProduc > 0) {
+        almacen->Productos = malloc(almacen->NProduc * sizeof(TProducto));
+        if (almacen->Productos == NULL) {
+            perror("Error al reservar memoria para los productos");
+            fclose(file);
+            return -1;
+        }
+
+        // Leer los productos
+        if (fread(almacen->Productos, sizeof(TProducto), almacen->NProduc, file) != (size_t)almacen->NProduc) {
+            perror("Error al leer los productos");
+            free(almacen->Productos);
+            almacen->Productos = NULL;
+            fclose(file);
+            return -1;
+        }
+    } else {
+        almacen->Productos = NULL; // No hay productos
+    }
+
+    fclose(file);
+    printf("Datos cargados desde el archivo '%s' correctamente.\n", nombreArchivo);
+    return 1; // Éxito
+}
+
+/**
+ * Esta función obtiene la primera posición libre en el vector de almacenes.
+ * Devuelve el índice del primer almacén sin clientes 
+ * Si el vector de almacenes está lleno, intenta redimensionar
+ * @return Índice de la posición libre o NAlmacenes si no hay ninguna.
+ */
+int getPosicionLibre(){
+
+    // Si aún no está inicializado, lo hacemos
+    if (Almacenes == NULL) {
+        Almacenes = malloc(5 * sizeof(TAlmacen));
+        if (Almacenes == NULL) {
+            fprintf(stderr, "Error al inicializar el vector de almacenes.\n");
+            return -1;
+        }
+        NAlmacenes = 0;
+
+        // Inicializar los nuevos almacenes
+        for (int i = 0; i < 5; i++) {
+            Almacenes[i].NClientes = 0;
+            Almacenes[i].Productos = NULL;
+            Almacenes[i].NProduc = 0;
+        }
+		return 0;
+    }
+
+    // Si el número de almacenes en memoria es igual al tamaño del vector, ampliamos 5
+    if (NAlmacenes >= sizeof(Almacenes)) {
+        printf("Tamaño Almacenes %ld...%d\n",sizeof(Almacenes), NAlmacenes);
+        TAlmacen *nuevoVector = realloc(Almacenes, (NAlmacenes + 5) * sizeof(TAlmacen));
+        if (nuevoVector != NULL) {
+            // Inicializar los nuevos almacenes
+            for (int i = NAlmacenes; i < NAlmacenes + 5; i++) {
+                nuevoVector[i].NClientes = 0;
+                nuevoVector[i].Productos = NULL;
+                nuevoVector[i].NProduc = 0;
+            }
+            Almacenes = nuevoVector;
+        } else {
+            fprintf(stderr, "Error al redimensionar el vector de almacenes.\n");
+            return -1;
+        }
+    }
+
+    // Buscamos si hay algún indice sin clientes (almacen "cerrado" == su memoria ha sido liberada)
+    for (int i = 0; i < NAlmacenes; i++) {
+		printf("Comparo elemento %d: %d\n", i, Almacenes[i].NClientes);
+        if (Almacenes[i].NClientes == 0) {
+			
+            return i;
+		}
+    }
+    printf("No hay posiciones libres disponibles.Salgo del bucle\n");
+
+    return -1;
+}
+
+
+
+/**
+ * Esta función crea un nuevo almacén en el servidor.
+ * 
+ */
+int *crearalmacen_1_svc(TDatosAlmacen *argp, struct svc_req *rqstp) {
+    static int result;
+    result = -1; // Inicializar el resultado como error por defecto
+
+    // Verificar si el archivo ya existe
+    if (archivoExiste(argp->Fichero)) {
+        // Comprobar si el almacén ya está cargado en memoria
+        int posAlmacen = buscaAlmacen(argp);
+		
+		// Si no está cargado en memoria, lo cargamos
+		if(posAlmacen == -1) {
+			int indiceLibre;
+			if((indiceLibre = getPosicionLibre()) != -1)
+				cargarDatosDesdeFichero(argp->Fichero, &Almacenes[indiceLibre]);
+			else {
+				fprintf(stderr, "Error: No hay espacio libre para cargar el almacén.\n");
+				return &result;
+			}
+		}
+		  
+		// Una vez cargado en memoria, incrementamos el número de clientes y devolvemos índice
+		Almacenes[posAlmacen].NClientes++;
+		result = posAlmacen;
+		
+
+        
+        return &result;
+    }
+
+    // Crear un nuevo archivo vacío
+    if (crearArchivoVacio(argp->Fichero, argp) == -1) {
+        return &result; // Error al crear el archivo
+    }
+
+
+    // // Ampliar el vector dinámico de almacenes
+    // TAlmacen *nuevoVector = realloc(Almacenes, (NAlmacenes + 1) * sizeof(TAlmacen));
+    // if (nuevoVector == NULL) {
+    //     perror("Error al ampliar el vector de almacenes");
+    //     return &result;
+    // }
+    // Almacenes = nuevoVector;
+
+	// ya se encarga de redimensionar si hiciera falta getPosicionLibre()
+	int indiceLibre;
+	if((indiceLibre = getPosicionLibre()) != -1){
+		TAlmacen *nuevoAlmacen = &Almacenes[indiceLibre];
+		nuevoAlmacen->almacen = *argp;
+		nuevoAlmacen->Productos = NULL;
+		nuevoAlmacen->NProduc = 0;
+		nuevoAlmacen->NClientes = 1;
+	} else {
+		fprintf(stderr, "Error: No se pudo crear el nuevo almacén, índice libre no encontrado.\n");
+		return &result;
+	}
+    
+    NAlmacenes++;
+    result = indiceLibre; // Devolvemos indice asignado
+	
+    return &result;
+}
+
+/**
+ * Esta función abre un almacén existente en el servidor.
+ * 
+ */
+int *abriralmacen_1_svc(char *argp, struct svc_req *rqstp)
+{
+	static int  result;
+	result = -1; // Valor por defecto en fallo
+	if (!archivoExiste(argp)) {
+		fprintf(stderr, "Error: El archivo no existe.\n");
+		return &result;
+	}
+	
+	int pos = getPosicionLibre();
+	if (pos == -1) {
+		fprintf(stderr, "Error: No hay espacio libre para abrir el almacén.\n");
+		return &result;
+	}
+
+	if(cargarDatosDesdeFichero(argp, &Almacenes[pos]) == -1) {
+		fprintf(stderr, "Error: No se pudo cargar el almacén desde el fichero.\n");
+		return &result;
+	}
+	
+
+	Almacenes[pos].NClientes++;
+	result = pos;
+
+	return &result;
+}
 
 
 TDatosAlmacen *
@@ -42,59 +372,6 @@ nproductos_1_svc(int *argp, struct svc_req *rqstp)
 	return &result;
 }
 
-int *
-crearalmacen_1_svc(TDatosAlmacen *argp, struct svc_req *rqstp)
-{
-	static int result;
-	// Inicializar el resultado como -1 (error por defecto)
-	result = -1;
-
-	// Verificar si el archivo ya existe
-	FILE *file = fopen(argp->Fichero, "rb");
-	if (file != NULL)
-	{
-		// El archivo ya existe, devolver -2
-		fclose(file);
-		result = -2;
-		return &result;
-	}
-
-	// Crear un nuevo archivo vacío
-	file = fopen(argp->Fichero, "wb");
-	if (file == NULL)
-	{
-		// Error al crear el archivo
-		perror("Error al crear el archivo");
-		return &result;
-	}
-
-	// Escribir la cabecera del almacén en el archivo
-	int nProductos = 0; // Inicialmente no hay productos
-	fwrite(&nProductos, sizeof(int), 1, file);
-	fwrite(argp->Nombre, sizeof(Cadena), 1, file);
-	fwrite(argp->Direccion, sizeof(Cadena), 1, file);
-
-	// Cerrar el archivo
-	fclose(file);
-
-	// Asignar un ID ficticio al almacén (por ejemplo, 0 para el primer almacén)
-	result = 0;
-
-	printf("Almacén '%s' creado con éxito en el servidor.\n", argp->Nombre);
-	return &result;
-}
-
-int *
-abriralmacen_1_svc(char *argp, struct svc_req *rqstp)
-{
-	static int  result;
-
-	/*
-	 * insert server code here
-	 */
-
-	return &result;
-}
 
 bool_t *
 guardaralmacen_1_svc(int *argp, struct svc_req *rqstp)
