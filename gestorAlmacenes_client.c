@@ -140,16 +140,16 @@ int main(int argc, char *argv[])
 				int id_obtenido = *resultado_rpc;
 				if (id_obtenido == -1)
 				{
-					printf("Error en el servidor al crear el almacén.\n");
+					clnt_perror(clnt, "Error RPC CrearAlmacen. Puede que ya exista.\nSi Success, el archivo ya existía y se ha abierto\n");
 				}
 				else
 				{
 					// Éxito: actualizar estado cliente
+					// Obtenemos datos del almacen (por si el fichero ya existía, cargar los datos reales)
+					TDatosAlmacen datos = *datosalmacen_1(&id_obtenido, clnt);
+					
 					id_almacen_actual = id_obtenido;
-					strncpy(nombre_almacen_actual,
-							nuevo_almacen_datos.Nombre,
-							sizeof(nombre_almacen_actual) - 1);
-					nombre_almacen_actual[sizeof(nombre_almacen_actual) - 1] = '\0';
+					strcpy(nombre_almacen_actual, datos.Nombre);
 					printf("Almacén '%s' creado/abierto con éxito. ID: %d\n",
 						   nombre_almacen_actual, id_almacen_actual);
 				}
@@ -170,8 +170,8 @@ int main(int argc, char *argv[])
 			Cadena datoFichero;
 
 			printf("Introduce el nombre del fichero para el almacén (ej: mi_almacen.dat): ");
-			fgets(datoFichero, sizeof(datoFichero), stdin);
-			datoFichero[strcspn(datoFichero, "\n")] = '\0';
+			scanf("%s", datoFichero);
+			limpiaBuffer();
 
 			// Llamada RPC
 			int *resultado_rpc = abriralmacen_1(datoFichero, clnt);
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 				int id_obtenido = *resultado_rpc;
 				if (id_obtenido == -1)
 				{
-					printf("Error en el servidor al abrir el almacén.\n");
+					clnt_perror(clnt, "Error RPC al abrir almacen\n");
 				}
 				else
 				{
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
 					TDatosAlmacen *nuevo_almacen_datos = datosalmacen_1(&id_obtenido, clnt);
 					if (nuevo_almacen_datos == NULL)
 					{
-						printf("Error al obtener los datos del almacén.\n");
+						clnt_perror(clnt, "Error RPC al obtener datos almacén\n");
 						break;
 					}
 					id_almacen_actual = id_obtenido;
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
 		{
 			printf("Has elegido: Cerrar un almacén\n");
 
-			// Permitirmos cerrar cualquier almacén abierto
+			// Podemos permiti cerrar cualquier almacén abierto
 			// (no solo el último abierto por este cliente)
 			// Aunque sí debe tener un almacen abierto para poder cerrar alguno
 			if (id_almacen_actual != -1)
@@ -230,20 +230,22 @@ int main(int argc, char *argv[])
 				// Comentar unicamente esta linea de abajo
 				int idAlmacen = id_almacen_actual; // Usar el ID del almacén actual
 				bool_t *resultado_rpc = cerraralmacen_1(&idAlmacen, clnt);
-				if (resultado_rpc == FALSE)
+				if (*resultado_rpc == FALSE)
 				{
 					// Error al cerrar el almacén
-					printf("Error al cerrar el almacén con ID %d.\n"
+					printf("Error al cerrar completamente el almacén con ID %d.\n"
 						   "Puede que haya más clientes interactuando con el almacén.\n",
 						   idAlmacen);
-					clnt_perror(clnt, "Error RPC CerrarAlmacen");
+					printf("Si error RPC indica success, hay más clientes. Se ha decrementado NClientes\n");
+					clnt_perror(clnt, "Error RPC CerrarAlmacen: ");
 				}
 
 				else if (resultado_rpc == NULL)
 				{
 					// Error en la llamada RPC
 					printf("Error en la llamada RPC para cerrar el almacén.\n");
-					clnt_perror(clnt, "Error RPC CerrarAlmacen");
+					clnt_perror(clnt, "Error RPC CerrarAlmacen: ");
+					break;
 				}
 				else if (*resultado_rpc == TRUE)
 				{
@@ -260,6 +262,9 @@ int main(int argc, char *argv[])
 					printf("Error desconocido al cerrar el almacén.\n");
 					clnt_perror(clnt, "Error RPC CerrarAlmacen");
 				}
+				id_almacen_actual = -1; // Reiniciar ID de almacén actual
+				strcpy(nombre_almacen_actual, ""); // Reiniciar nombre de almacén actual
+
 			}
 			else
 			{
@@ -298,7 +303,7 @@ int main(int argc, char *argv[])
 			printf("Has elegido: Listar productos del almacén\n");
 			if (id_almacen_actual == -1)
 			{
-				printf("Error: No hay ningún almacén abierto.\n");
+				clnt_perror(clnt, "Error RPC ListarProductos. No hay almacén abierto\n");
 				break;
 			}
 			// Llamada RPC para obtener el número de productos
@@ -310,7 +315,7 @@ int main(int argc, char *argv[])
 			}
 			else if (*resultado_rpc == -1)
 			{
-				printf("Error: No se ha podido obtener el número de productos.\n");
+				clnt_perror(clnt, "Error RPC nproductos. No se ha podido obtener el número de productos.\n");
 				break;
 			}
 			else if (*resultado_rpc == 0)
@@ -370,10 +375,8 @@ int main(int argc, char *argv[])
 			TBusProd nuevo_producto_busca = {id_almacen_actual};
 			// Solicitar datos al usuario
 			printf("Introduce el código del producto: ");
+			scanf("%s", nuevo_producto_busca.CodProducto);
 			limpiaBuffer();
-			fgets(nuevo_producto_busca.CodProducto, sizeof(nuevo_producto_busca.CodProducto), stdin);
-
-			nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
 
 			// Llamada RPC para buscar el producto por código
 			int *resultado_rpc = buscaproducto_1(&nuevo_producto_busca, clnt);
@@ -396,19 +399,18 @@ int main(int argc, char *argv[])
 				strcpy(nuevo_producto.CodProd, nuevo_producto_busca.CodProducto);
 
 				printf("Introduce el nombre del producto: ");
-				limpiaBuffer();
 				fgets(nuevo_producto.NombreProd, sizeof(nuevo_producto.NombreProd), stdin);
 				nuevo_producto.NombreProd[strcspn(nuevo_producto.NombreProd, "\n")] = '\0';
 
-				limpiaBuffer();
+				
 				printf("Introduce la cantidad del producto: ");
 				scanf("%d", &nuevo_producto.Cantidad);
-
 				limpiaBuffer();
+
 				printf("Introduce el precio del producto: ");
 				scanf("%f", &nuevo_producto.Precio);
-
 				limpiaBuffer();
+
 				printf("Introduce la descripción del producto: ");
 				fgets(nuevo_producto.Descripcion, sizeof(nuevo_producto.Descripcion), stdin);
 				nuevo_producto.Descripcion[strcspn(nuevo_producto.Descripcion, "\n")] = '\0';
@@ -417,7 +419,7 @@ int main(int argc, char *argv[])
 				scanf("%d %d %d", &nuevo_producto.Caducidad.Dia,
 					  &nuevo_producto.Caducidad.Mes,
 					  &nuevo_producto.Caducidad.Anyo);
-
+				limpiaBuffer();
 				nuevo_producto_anadir.Producto = nuevo_producto;
 				// Llamada RPC para añadir el producto
 				bool_t *resultado_rpcDos = anadirproducto_1(&nuevo_producto_anadir, clnt);
@@ -463,11 +465,9 @@ int main(int argc, char *argv[])
 			// Solicitar datos al usuario
 			printf("Introduce el código del producto: ");
 
+			scanf("%s", nuevo_producto_busca.CodProducto);
 			limpiaBuffer();
-
-			fgets(nuevo_producto_busca.CodProducto, sizeof(nuevo_producto_busca.CodProducto), stdin);
-			nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
-
+			
 			// Llamada RPC para buscar el producto por código
 			int *resultado_rpc = buscaproducto_1(&nuevo_producto_busca, clnt);
 			if (resultado_rpc == NULL)
@@ -509,33 +509,33 @@ int main(int argc, char *argv[])
 
 				TProducto nuevo_producto;
 				printf("Por favor, introduce los nuevos datos del nuevo producto:\nCódigo: ");
+
+				scanf("%s", nuevo_producto.CodProd);
 				limpiaBuffer();
-				fgets(nuevo_producto.CodProd, sizeof(nuevo_producto.CodProd), stdin);
-				nuevo_producto.CodProd[strcspn(nuevo_producto.CodProd, "\n")] = '\0';
+				
 
 				printf("Nombre: ");
-				limpiaBuffer();
 				fgets(nuevo_producto.NombreProd, sizeof(nuevo_producto.NombreProd), stdin);
 				nuevo_producto.NombreProd[strcspn(nuevo_producto.NombreProd, "\n")] = '\0';
 
-				limpiaBuffer();
 				printf("Cantidad: ");
 				scanf("%d", &nuevo_producto.Cantidad);
-
 				limpiaBuffer();
+
 				printf("Precio: ");
 				scanf("%f", &nuevo_producto.Precio);
-
 				limpiaBuffer();
+
 				printf("Descripción: ");
 				fgets(nuevo_producto.Descripcion, sizeof(nuevo_producto.Descripcion), stdin);
 				nuevo_producto.Descripcion[strcspn(nuevo_producto.Descripcion, "\n")] = '\0';
+				//no hace falta limpiar buffer después de fgets
 
 				printf("Fecha de caducidad (DD MM YYYY): ");
 				scanf("%d %d %d", &nuevo_producto.Caducidad.Dia,
 					  &nuevo_producto.Caducidad.Mes,
 					  &nuevo_producto.Caducidad.Anyo);
-
+				limpiaBuffer();
 				// Llamada RPC para modificar producto
 				TActProd nuevo_producto_modificar = {id_almacen_actual};
 				nuevo_producto_modificar.Producto = nuevo_producto;
@@ -571,13 +571,17 @@ int main(int argc, char *argv[])
 
 			TBusProd nuevo_producto_busca = {id_almacen_actual};
 			// Solicitar datos al usuario
-			printf("Introduce el código del producto: ");
+			printf("Introduce el código del producto: \n");
 
-			limpiaBuffer();
+			
 			//scanf("%s", nuevo_producto_busca.CodProducto);
-			fgets(nuevo_producto_busca.CodProducto, sizeof(nuevo_producto_busca.CodProducto), stdin);
-			printf( "hola");
-			nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
+			
+			// Codigo de producto no debería tener espacios
+			scanf("%s", nuevo_producto_busca.CodProducto);
+			limpiaBuffer();
+			
+			
+			//nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
 			// Llamada RPC para buscar el producto por código
 			int *resultado_rpc = buscaproducto_1(&nuevo_producto_busca, clnt);
 
@@ -627,14 +631,15 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			TBusProd nuevo_producto_busca;
+			TBusProd nuevo_producto_busca ={id_almacen_actual};
 			// Solicitar datos al usuario
 			printf("Introduce el código del producto: ");
-
+			
+			// Codigo de producto no debería tener espacios
+			scanf("%s", nuevo_producto_busca.CodProducto);
+			//fgets(nuevo_producto_busca.CodProducto, sizeof(nuevo_producto_busca.CodProducto), stdin);
+			//nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
 			limpiaBuffer();
-
-			fgets(nuevo_producto_busca.CodProducto, sizeof(nuevo_producto_busca.CodProducto), stdin);
-			nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
 			
 			// Llamada RPC para buscar el producto por código
 			bool_t *resultado_rpc = eliminarproducto_1(&nuevo_producto_busca, clnt);
@@ -687,9 +692,7 @@ int main(int argc, char *argv[])
 		if (opcion != 0)
 		{
 			printf("\nPulsa Enter para continuar...");
-			// Consumir el Enter pendiente del scanf anterior y esperar nuevo Enter
-			// while (getchar() != '\n'); // Limpia buffer si quedó algo
-			fflush(stdin); // Limpiamos buffer
+			
 			getchar();	   // Espera el Enter del usuario
 		}
 
