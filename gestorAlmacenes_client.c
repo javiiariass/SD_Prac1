@@ -15,19 +15,18 @@
 // Variable global para el nombre del almacén actual
 Cadena nombre_almacen_actual = "";
 
-
-
-
 // Declaración de la función mostrar_menu
 int mostrar_menu();
 
+// Muestra en una línea, la info de  producto en formato tabular
+void muestraLineaProducto(TProducto *producto, int i);
 // Método que limpia buffer de teclado
 void limpiaBuffer();
 
-// Función supermercado_1 generada por rpcgen, comentada ya que no se usará directamente.
+// Función supermercado_1 generada por rpcgen
 void supermercado_1(char *host)
 {
-	/*
+
 	CLIENT *clnt;
 	TDatosAlmacen *result_1;
 	int datosalmacen_1_arg;
@@ -54,9 +53,8 @@ void supermercado_1(char *host)
 	TProducto *result_12; // Corresponde a operacion_1
 	TOperacion operacion_1_arg;
 
-
 #ifndef DEBUG
-	clnt = clnt_create(host, SUPERMERCADO, SUPERMERCADO_VER, "udp"); // Originalmente UDP
+	clnt = clnt_create(host, SUPERMERCADO, SUPERMERCADO_VER, "tcp"); // Originalmente UDP
 	if (clnt == NULL)
 	{
 		clnt_pcreateerror(host);
@@ -71,7 +69,6 @@ void supermercado_1(char *host)
 #ifndef DEBUG
 	clnt_destroy(clnt);
 #endif // DEBUG //
-	*/
 }
 
 // Función principal del cliente
@@ -116,14 +113,13 @@ int main(int argc, char *argv[])
 			}
 
 			TDatosAlmacen nuevo_almacen_datos;
-			
 
 			// Solicitar datos al usuario
 			printf("Introduce el nombre del almacén: ");
 			fgets(nuevo_almacen_datos.Nombre, sizeof(nuevo_almacen_datos.Nombre), stdin);
 			nuevo_almacen_datos.Nombre[strcspn(nuevo_almacen_datos.Nombre, "\n")] = '\0';
 			// con scanf solo conseguimos la primera cadena antes del espacio
-			//scanf("%s",nuevo_almacen_datos.Nombre); 
+			// scanf("%s",nuevo_almacen_datos.Nombre);
 
 			printf("Introduce la dirección del almacén: ");
 			fgets(nuevo_almacen_datos.Direccion, sizeof(nuevo_almacen_datos.Direccion), stdin);
@@ -160,7 +156,8 @@ int main(int argc, char *argv[])
 			}
 
 			break;
-		case 2:{
+		case 2:
+		{
 			printf("Has elegido: Abrir un fichero de almacén\n");
 			if (id_almacen_actual != -1)
 			{
@@ -169,12 +166,9 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			TDatosAlmacen nuevo_almacen_datos;
-			
-
 			// Solicitar datos al usuario
 			Cadena datoFichero;
-			
+
 			printf("Introduce el nombre del fichero para el almacén (ej: mi_almacen.dat): ");
 			fgets(datoFichero, sizeof(datoFichero), stdin);
 			datoFichero[strcspn(datoFichero, "\n")] = '\0';
@@ -183,69 +177,504 @@ int main(int argc, char *argv[])
 			int *resultado_rpc = abriralmacen_1(datoFichero, clnt);
 			if (resultado_rpc == NULL)
 			{
-				clnt_perror(clnt, "Error RPC CrearAlmacen");
+				clnt_perror(clnt, "Error RPC AbrirAlmacen");
 			}
 			else
 			{
 				int id_obtenido = *resultado_rpc;
 				if (id_obtenido == -1)
 				{
-					printf("Error en el servidor al crear el almacén.\n");
+					printf("Error en el servidor al abrir el almacén.\n");
 				}
 				else
 				{
 					// Leer datos almacen para nombre.
 					// Éxito: actualizar estado cliente
+					TDatosAlmacen *nuevo_almacen_datos = datosalmacen_1(&id_obtenido, clnt);
+					if (nuevo_almacen_datos == NULL)
+					{
+						printf("Error al obtener los datos del almacén.\n");
+						break;
+					}
 					id_almacen_actual = id_obtenido;
 					strncpy(nombre_almacen_actual,
-							nuevo_almacen_datos.Nombre,
-							sizeof(nombre_almacen_actual) - 1);
+							nuevo_almacen_datos->Nombre,
+							sizeof(nuevo_almacen_datos->Nombre) - 1);
 					nombre_almacen_actual[sizeof(nombre_almacen_actual) - 1] = '\0';
 					printf("Almacén '%s' creado/abierto con éxito. ID: %d\n",
 						   nombre_almacen_actual, id_almacen_actual);
 				}
 			}
-			
 		}
-			
-			break;
+
+		break;
 		case 3:
+		{
 			printf("Has elegido: Cerrar un almacén\n");
-			// Aquí irán las llamadas RPC correspondientes
-			// Ejemplo: Llamar a cerraralmacen_1 si id_almacen_actual != -1
+
+			// Permitirmos cerrar cualquier almacén abierto
+			// (no solo el último abierto por este cliente)
+			// Aunque sí debe tener un almacen abierto para poder cerrar alguno
+			if (id_almacen_actual != -1)
+			{
+
+				// ********************** Leer README **********************
+				// Si se quiere cerrar un almacén diferente al actual
+
+				// Descomentar esta parte y comentar la de abajo
+				/*printf("Indique el id del almacén a cerrar: ");
+				int idAlmacen;
+				limpiaBuffer();
+				scanf("%d", &idAlmacen);/**/
+
+				// Comentar unicamente esta linea de abajo
+				int idAlmacen = id_almacen_actual; // Usar el ID del almacén actual
+				bool_t *resultado_rpc = cerraralmacen_1(&idAlmacen, clnt);
+				if (resultado_rpc == FALSE)
+				{
+					// Error al cerrar el almacén
+					printf("Error al cerrar el almacén con ID %d.\n"
+						   "Puede que haya más clientes interactuando con el almacén.\n",
+						   idAlmacen);
+					clnt_perror(clnt, "Error RPC CerrarAlmacen");
+				}
+
+				else if (resultado_rpc == NULL)
+				{
+					// Error en la llamada RPC
+					printf("Error en la llamada RPC para cerrar el almacén.\n");
+					clnt_perror(clnt, "Error RPC CerrarAlmacen");
+				}
+				else if (*resultado_rpc == TRUE)
+				{
+					printf("Almacén cerrado con éxito.\n");
+					if (id_almacen_actual == idAlmacen)
+					{
+						id_almacen_actual = -1; // Reiniciar ID de almacén actual
+						strncpy(nombre_almacen_actual, "", sizeof(nombre_almacen_actual) - 1);
+						nombre_almacen_actual[sizeof(nombre_almacen_actual) - 1] = '\0';
+					}
+				}
+				else
+				{
+					printf("Error desconocido al cerrar el almacén.\n");
+					clnt_perror(clnt, "Error RPC CerrarAlmacen");
+				}
+			}
+			else
+			{
+				printf("Error: No hay ningún almacén abierto.\n");
+			}
 			break;
+		}
 		case 4:
+		{
 			printf("Has elegido: Guardar Datos\n");
-			// Aquí irán las llamadas RPC correspondientes
-			// Ejemplo: Llamar a guardaralmacen_1 si id_almacen_actual != -1
+			if (id_almacen_actual == -1)
+			{
+				printf("Error: No hay ningún almacén abierto.\n");
+				break;
+			}
+			bool_t *resultado_rpc = guardaralmacen_1(&id_almacen_actual, clnt);
+			if (*resultado_rpc == 0) // == null
+			{
+				clnt_perror(clnt, "Error RPC GuardarAlmacen");
+			}
+			else if (*resultado_rpc == FALSE)
+			{
+				printf("Error: No se ha podido guardar el almacén.\n");
+				break;
+			}
+			else
+			{
+				// Éxito al guardar el almacén
+				printf("Almacén guardado correctamente.\n");
+			}
+
 			break;
+		}
 		case 5:
+		{
 			printf("Has elegido: Listar productos del almacén\n");
-			// Aquí irán las llamadas RPC correspondientes
-			// Ejemplo: Llamar a nproductos_1 y luego bucle con obtenerproducto_1
+			if (id_almacen_actual == -1)
+			{
+				printf("Error: No hay ningún almacén abierto.\n");
+				break;
+			}
+			// Llamada RPC para obtener el número de productos
+			int *resultado_rpc = nproductos_1(&id_almacen_actual, clnt);
+			if (resultado_rpc == NULL)
+			{
+				clnt_perror(clnt, "Error RPC nproductos");
+				break;
+			}
+			else if (*resultado_rpc == -1)
+			{
+				printf("Error: No se ha podido obtener el número de productos.\n");
+				break;
+			}
+			else if (*resultado_rpc == 0)
+			{
+				printf("El almacén está vacío.\n");
+				break;
+			}
+			else
+			{
+				TDatosAlmacen *almacen_datos = datosalmacen_1(&id_almacen_actual, clnt);
+				if (almacen_datos == NULL)
+				{
+					clnt_perror(clnt, "Error RPC datosalmacen");
+					break;
+				}
+
+				printf("Listado del almacén '%s' localizado en %s\n",
+					   almacen_datos->Nombre,
+					   almacen_datos->Direccion);
+				printf("*****************************************************************************\n");
+				printf("%-*s %-*s %-*s %*s %s\n",
+					   6, "CODIGO",
+					   35, "NOMBRE",
+					   10, "PRECIO",
+					   8, "CANTIDAD",
+					   "FECHA CADUCIDAD");
+				TObtProd obtProductoAUX = {id_almacen_actual};
+				for (int i = 0; i < *resultado_rpc; i++)
+				{
+					// Llamar a obtenerproducto_1 para cada producto
+					obtProductoAUX.PosProducto = i;
+					TProducto *producto = obtenerproducto_1(&obtProductoAUX, clnt);
+					if (producto == NULL)
+					{
+						clnt_perror(clnt, "Error RPC obtenerproducto");
+						break;
+					}
+					// Mostrar el producto
+					muestraLineaProducto(producto, 0);
+				}
+			}
+
 			break;
+		}
 		case 6:
+		{
+
 			printf("Has elegido: Añadir un producto\n");
-			// Aquí irán las llamadas RPC correspondientes
-			// Ejemplo: Llamar a una función local que pida datos producto y llame a anadirproducto_1
+			if (id_almacen_actual == -1)
+			{
+				printf("Error: No hay ningún almacén abierto.\n");
+				break;
+			}
+
+			// Solicitar código de producto y si no existe, pedir datos
+			
+			TBusProd nuevo_producto_busca = {id_almacen_actual};
+			// Solicitar datos al usuario
+			printf("Introduce el código del producto: ");
+			limpiaBuffer();
+			fgets(nuevo_producto_busca.CodProducto, sizeof(nuevo_producto_busca.CodProducto), stdin);
+
+			nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
+
+			// Llamada RPC para buscar el producto por código
+			int *resultado_rpc = buscaproducto_1(&nuevo_producto_busca, clnt);
+			if (resultado_rpc == NULL)
+			{
+				clnt_perror(clnt, "Error RPC buscaproducto");
+				break;
+			}
+
+			switch (*resultado_rpc)
+			{
+			case -1: // Cuando no se encuentra es cuando hay que añadirlo
+			{
+				// Llamada RPC para añadir el producto
+				// anadirproducto_1(&nuevo_producto, clnt);
+				printf("Revisión realizada con éxito. No existe ningún producto con ese código.\n");
+				printf("Por favor, introduce los datos del nuevo producto:\n");
+				TProducto nuevo_producto;
+				TActProd nuevo_producto_anadir = {id_almacen_actual};
+				strcpy(nuevo_producto.CodProd, nuevo_producto_busca.CodProducto);
+
+				printf("Introduce el nombre del producto: ");
+				limpiaBuffer();
+				fgets(nuevo_producto.NombreProd, sizeof(nuevo_producto.NombreProd), stdin);
+				nuevo_producto.NombreProd[strcspn(nuevo_producto.NombreProd, "\n")] = '\0';
+
+				limpiaBuffer();
+				printf("Introduce la cantidad del producto: ");
+				scanf("%d", &nuevo_producto.Cantidad);
+
+				limpiaBuffer();
+				printf("Introduce el precio del producto: ");
+				scanf("%f", &nuevo_producto.Precio);
+
+				limpiaBuffer();
+				printf("Introduce la descripción del producto: ");
+				fgets(nuevo_producto.Descripcion, sizeof(nuevo_producto.Descripcion), stdin);
+				nuevo_producto.Descripcion[strcspn(nuevo_producto.Descripcion, "\n")] = '\0';
+
+				printf("Introduce la fecha de caducidad (DD MM YYYY): ");
+				scanf("%d %d %d", &nuevo_producto.Caducidad.Dia,
+					  &nuevo_producto.Caducidad.Mes,
+					  &nuevo_producto.Caducidad.Anyo);
+
+				nuevo_producto_anadir.Producto = nuevo_producto;
+				// Llamada RPC para añadir el producto
+				bool_t *resultado_rpcDos = anadirproducto_1(&nuevo_producto_anadir, clnt);
+				if (resultado_rpcDos == NULL)
+				{
+					clnt_perror(clnt, "Error RPC anadirproducto");
+					break;
+				}
+				else if (*resultado_rpcDos == FALSE)
+				{
+					printf("Error: No se ha podido añadir el producto.\n");
+					break;
+				}
+				else
+				{
+					printf("Producto añadido correctamente.\n");
+				}
+			}
 			break;
+			case -2:
+				printf("Error: El almacén está cerrado.\n");
+				break;
+			case -3:
+				printf("Error: El almacén no tiene productos.\n");
+				break;
+			default:
+				printf("El producto ya existe. No se puede añadir.\n");
+				break;
+			}
+
+			break;
+		}
 		case 7:
+		{
 			printf("Has elegido: Actualizar un producto\n");
-			// Aquí irán las llamadas RPC correspondientes
-			// Ejemplo: Llamar a una función local que pida código, busque, pida nuevos datos y llame a actualizarproducto_1
+			if (id_almacen_actual == -1)
+			{
+				printf("Error: No hay ningún almacén abierto.\n");
+				break;
+			}
+
+			TBusProd nuevo_producto_busca = {id_almacen_actual};
+			// Solicitar datos al usuario
+			printf("Introduce el código del producto: ");
+
+			limpiaBuffer();
+
+			fgets(nuevo_producto_busca.CodProducto, sizeof(nuevo_producto_busca.CodProducto), stdin);
+			nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
+
+			// Llamada RPC para buscar el producto por código
+			int *resultado_rpc = buscaproducto_1(&nuevo_producto_busca, clnt);
+			if (resultado_rpc == NULL)
+			{
+				clnt_perror(clnt, "Error RPC buscaproducto");
+				break;
+			}
+
+			switch (*resultado_rpc)
+			{
+			case -1:
+			{
+				printf("Error: El producto no existe.\n");
+				break;
+			}
 			break;
+			case -2:
+				printf("Error: El almacén está cerrado.\n");
+				break;
+			case -3:
+				printf("Error: El almacén no tiene productos.\n");
+				break;
+			default:
+				// Llamada RPC para modificar el producto
+				// anadirproducto_1(&nuevo_producto, clnt);
+				printf("Revisión realizada con éxito. Existe el producto con ese código.\n");
+
+				TObtProd obtProductoAUX = {id_almacen_actual, *resultado_rpc};
+				TProducto *producto = obtenerproducto_1(&obtProductoAUX, clnt);
+
+				if (producto == NULL)
+				{
+					clnt_perror(clnt, "Error RPC obtenerproducto");
+					break;
+				}
+
+				muestraLineaProducto(producto, 1);
+				printf("Descripción: %s\n", producto->Descripcion);
+
+				TProducto nuevo_producto;
+				printf("Por favor, introduce los nuevos datos del nuevo producto:\nCódigo: ");
+				limpiaBuffer();
+				fgets(nuevo_producto.CodProd, sizeof(nuevo_producto.CodProd), stdin);
+				nuevo_producto.CodProd[strcspn(nuevo_producto.CodProd, "\n")] = '\0';
+
+				printf("Nombre: ");
+				limpiaBuffer();
+				fgets(nuevo_producto.NombreProd, sizeof(nuevo_producto.NombreProd), stdin);
+				nuevo_producto.NombreProd[strcspn(nuevo_producto.NombreProd, "\n")] = '\0';
+
+				limpiaBuffer();
+				printf("Cantidad: ");
+				scanf("%d", &nuevo_producto.Cantidad);
+
+				limpiaBuffer();
+				printf("Precio: ");
+				scanf("%f", &nuevo_producto.Precio);
+
+				limpiaBuffer();
+				printf("Descripción: ");
+				fgets(nuevo_producto.Descripcion, sizeof(nuevo_producto.Descripcion), stdin);
+				nuevo_producto.Descripcion[strcspn(nuevo_producto.Descripcion, "\n")] = '\0';
+
+				printf("Fecha de caducidad (DD MM YYYY): ");
+				scanf("%d %d %d", &nuevo_producto.Caducidad.Dia,
+					  &nuevo_producto.Caducidad.Mes,
+					  &nuevo_producto.Caducidad.Anyo);
+
+				// Llamada RPC para modificar producto
+				TActProd nuevo_producto_modificar = {id_almacen_actual};
+				nuevo_producto_modificar.Producto = nuevo_producto;
+				bool_t *resultado_rpcDos = actualizarproducto_1(&nuevo_producto_modificar, clnt);
+
+				if (resultado_rpcDos == NULL)
+				{
+					clnt_perror(clnt, "Error RPC modificarproducto");
+					break;
+				}
+				else if (*resultado_rpcDos == FALSE)
+				{
+					printf("Error: No se ha podido modificar el producto.\n");
+					break;
+				}
+				else
+				{
+					printf("Producto modificado correctamente.\n");
+				}
+				break;
+			}
+
+			break;
+		}
 		case 8:
+		{
 			printf("Has elegido: Consultar un producto\n");
-			// Aquí irán las llamadas RPC correspondientes
-			// Ejemplo: Llamar a una función local que pida código, llame a buscaproducto_1 y obtenerproducto_1
+			if (id_almacen_actual == -1)
+			{
+				printf("Error: No hay ningún almacén abierto.\n");
+				break;
+			}
+
+			TBusProd nuevo_producto_busca = {id_almacen_actual};
+			// Solicitar datos al usuario
+			printf("Introduce el código del producto: ");
+
+			limpiaBuffer();
+			//scanf("%s", nuevo_producto_busca.CodProducto);
+			fgets(nuevo_producto_busca.CodProducto, sizeof(nuevo_producto_busca.CodProducto), stdin);
+			printf( "hola");
+			nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
+			// Llamada RPC para buscar el producto por código
+			int *resultado_rpc = buscaproducto_1(&nuevo_producto_busca, clnt);
+
+			if (resultado_rpc == NULL)
+			{
+				clnt_perror(clnt, "Error RPC buscaproducto");
+				break;
+			}
+
+			switch (*resultado_rpc)
+			{
+			case -1:
+			{
+				printf("Error: El producto no existe.\n");
+				break;
+			}
 			break;
-		case 9:
+			case -2:
+				printf("Error: El almacén está cerrado.\n");
+				break;
+			case -3:
+				printf("Error: El almacén no tiene productos.\n");
+				break;
+			default:
+				// Llamada RPC para consultar el producto
+				TObtProd obtProductoAUX = {id_almacen_actual, *resultado_rpc};
+				TProducto *producto = obtenerproducto_1(&obtProductoAUX, clnt);
+				if (producto == NULL)
+				{
+					clnt_perror(clnt, "Error RPC obtenerproducto");
+					break;
+				}
+
+				muestraLineaProducto(producto, 1);
+				printf("Descripción: %s\n", producto->Descripcion);
+				break;
+			}
+		}
+
+		break;
+		case 9:{
+			
 			printf("Has elegido: Eliminar un producto\n");
-			// Aquí irán las llamadas RPC correspondientes
-			// Ejemplo: Llamar a una función local que pida código y llame a eliminarproducto_1
+			if (id_almacen_actual == -1)
+			{
+				printf("Error: No hay ningún almacén abierto.\n");
+				break;
+			}
+
+			TBusProd nuevo_producto_busca;
+			// Solicitar datos al usuario
+			printf("Introduce el código del producto: ");
+
+			limpiaBuffer();
+
+			fgets(nuevo_producto_busca.CodProducto, sizeof(nuevo_producto_busca.CodProducto), stdin);
+			nuevo_producto_busca.CodProducto[strcspn(nuevo_producto_busca.CodProducto, "\n")] = '\0';
+			
+			// Llamada RPC para buscar el producto por código
+			bool_t *resultado_rpc = eliminarproducto_1(&nuevo_producto_busca, clnt);
+			if (resultado_rpc == NULL)
+			{
+				clnt_perror(clnt, "Error RPC eliminarproducto");
+				break;
+			}
+			else if (*resultado_rpc == FALSE)
+			{
+				printf("Error: No se ha podido eliminar el producto.\n");
+				break;
+			}
+			else
+			{
+				printf("Producto eliminado correctamente.\n");
+			}
 			break;
+		}
 		case 0:
 			printf("Saliendo del programa...\n");
+			// cerramos el almacén si está abierto
+			if (id_almacen_actual != -1)
+			{
+				bool_t *resultado_rpc = cerraralmacen_1(&id_almacen_actual, clnt);
+				if (resultado_rpc == FALSE)
+				{
+					printf("Error al cerrar el almacén con ID %d.\n"
+						   "Puede que haya más clientes interactuando con el almacén.\n",
+						   id_almacen_actual);
+					clnt_perror(clnt, "Error RPC CerrarAlmacen");
+				}
+				else if (*resultado_rpc == TRUE)
+				{
+					printf("Almacén cerrado con éxito.\n");
+					id_almacen_actual = -1; // Reiniciar ID de almacén actual
+					strncpy(nombre_almacen_actual, "", sizeof(nombre_almacen_actual) - 1);
+					nombre_almacen_actual[sizeof(nombre_almacen_actual) - 1] = '\0';
+				}
+			}
 			// Considerar cerrar el almacén si está abierto antes de salir?
 			// if (id_almacen_actual != -1) { /* llamar a cerraralmacen_1 */ }
 			break;
@@ -276,10 +705,10 @@ int main(int argc, char *argv[])
 /**
  * Función para mostrar el menú de opciones al usuario.
  * Permite seleccionar diferentes acciones relacionadas con el almacén.
- * 
- * Controla errores relacionados con teclas incorrectas. 
+ *
+ * Controla errores relacionados con teclas incorrectas.
  * Solo devuelve opciones válidas
- * 
+ *
  * @return int Opción seleccionada por el usuario.
  */
 int mostrar_menu()
@@ -316,17 +745,15 @@ int mostrar_menu()
 
 	// Leer la opción del usuario
 	// Validar que se introduce un entero dentro del rango "correcto"
-	while (scanf("%d", &opcion) != 1 || opcion < 0 || opcion > 9) //scanf devuelve 1 si la entrada es correcta
+	while (scanf("%d", &opcion) != 1 || opcion < 0 || opcion > 9) // scanf devuelve 1 si la entrada es correcta
 	{
 		// Nos aseguramos que la entrada sea correcta y este en rango
 		printf("Entrada inválida. Introduce un número válido: ");
 		// Limpiar el buffer de entrada
 		int aux;
 		limpiaBuffer();
-			
-			
 
-		// No sirve en linux 
+		// No sirve en linux
 		// fflush(stdin);
 	}
 
@@ -336,13 +763,51 @@ int mostrar_menu()
 	return opcion;
 }
 
-
 /**
  * Función para limpiar el buffer de entrada.
  * Elimina cualquier carácter sobrante hasta el final de la línea.
  */
 void limpiaBuffer()
 {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) { }
+	int c;
+	while ((c = getchar()) != '\n' && c != EOF)
+	{
+	}
+}
+
+/**
+ * Función para mostrar una línea de producto.
+ * Se utiliza para mostrar los detalles de un producto en un formato tabular.
+ * @param producto Puntero al producto a mostrar.
+ * @param cabecera Indica si se debe mostrar la cabecera de la tabla. 0 no la muestra.
+ */
+void muestraLineaProducto(TProducto *producto, int cabecera)
+{
+	int ancho_codigo = 6;  // Ancho para CODIGO
+	int ancho_nombre = 35; // Ancho para NOMBRE
+	int ancho_precio = 10; // Ancho para PRECIO
+	int ancho_cantidad = 8;
+
+	// Formato
+	//%-*s:
+	// -: Indica alineación a la izquierda.
+	// \*: Indica que el ancho se tomará del siguiente argumento en la lista
+	// .6f para mostrar 6 decimales
+	if (cabecera)
+	{
+		printf("%-*s %-*s %-*s %*s %s\n",
+			   ancho_codigo, "CODIGO",
+			   ancho_nombre, "NOMBRE",
+			   ancho_precio, "PRECIO",
+			   ancho_cantidad, "CANTIDAD",
+			   "FECHA CADUCIDAD");
+	}
+	printf("%-*s %-*s %-*.6f %-*d %02d/%02d/%d\n",
+		   ancho_codigo, producto->CodProd,
+		   ancho_nombre, producto->NombreProd,
+		   ancho_precio, producto->Precio, // .6f para mostrar 6 decimales
+		   ancho_cantidad, producto->Cantidad,
+		   producto->Caducidad.Dia,
+		   producto->Caducidad.Mes,
+		   producto->Caducidad.Anyo);
 }

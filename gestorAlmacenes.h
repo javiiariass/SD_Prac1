@@ -66,14 +66,6 @@ struct TOperacion {
 };
 typedef struct TOperacion TOperacion;
 
-// Definición de la estructura TAlmacen
-typedef struct {
-    TDatosAlmacen almacen; // Datos del almacén
-    TProducto *Productos; // Vector dinámico de productos
-    int NProduc;          // Número de productos
-    int NClientes;        // Número de clientes que comparten el almacén
-} TAlmacen;
-
 #define SUPERMERCADO 0x30000001
 #define SUPERMERCADO_VER 1
 

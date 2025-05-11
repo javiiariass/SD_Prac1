@@ -16,13 +16,6 @@
 #define SIG_PF void(*)(int)
 #endif
 
-// Declarar las variables globales como extern
-extern TAlmacen *Almacenes;
-extern int NAlmacenes;
-
-// Declarar la función liberarMemoria como extern
-extern void liberarMemoria();
-
 static void
 supermercado_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {
@@ -175,18 +168,7 @@ main (int argc, char **argv)
 		exit(1);
 	}
 
-	// >>>>>> INICIO: Inicialización de estructuras globales del servidor <<<<<<
-	Almacenes = NULL; // El vector de almacenes inicia vacío
-	NAlmacenes = 0;   // El contador de almacenes inicia en cero
-
-	printf("SERVIDOR: Estructuras globales de almacenes inicializadas.\n");
-	// >>>>>> FIN: Inicialización de estructuras globales del servidor <<<<<<
-
 	svc_run ();
-
-	// Llamar a liberarMemoria antes de finalizar el servidor
-	liberarMemoria();
-
 	fprintf (stderr, "%s", "svc_run returned");
 	exit (1);
 	/* NOTREACHED */
