@@ -612,9 +612,11 @@ static void liberarMemoriaFinal()
     if (Almacenes != NULL)
     {
         free(Almacenes);
+        Almacenes = NULL; // Evitar puntero colgante
     }
 
     NAlmacenes = 0;
+    tamAlmacenes =0;
     printf("Memoria dinámica liberada correctamente.\n");
 }
 
