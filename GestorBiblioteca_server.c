@@ -6,6 +6,21 @@
 
 #include "GestorBiblioteca.h"
 
+
+// establece la codificación del sistema al programa
+#include "autolocale.h"
+
+// ************************************ Variables globales ************************************
+TLibro *Biblioteca=NULL; //Vector dinámico de libros
+int NumLibros=0; //Número de libros almacenados en el vector dinámico.
+int Tama=0; //Tamaño del vector dinámico. El incremento será por bloques de 4 libros.
+int IdAdmin=-1; //Identificador de Administración enviado al usuario.
+Cadena NomFichero=""; //Nombre del último fichero binario que se ha cargado en memoria.
+int CampoOrdenacion=0; //Campo de ordenación por que se ordenarán los libros.
+
+
+
+
 int *
 conexion_1_svc(char *argp, struct svc_req *rqstp)
 {
