@@ -6,114 +6,131 @@
 
 #include "GestorBiblioteca.h"
 
+// establece la codificación del sistema al programa
+#include "autolocale.h"
+// ******************************************** MENUS ********************************************
 
-void
-gestorbiblioteca_1(char *host)
+
+
+void gestorbiblioteca_1(char *host)
 {
 	CLIENT *clnt;
-	int  *result_1;
-	char  conexion_1_arg;
-	bool_t  *result_2;
-	int  desconexion_1_arg;
-	int  *result_3;
-	TFichero  cargardatos_1_arg;
-	bool_t  *result_4;
-	int  guardardatos_1_arg;
-	int  *result_5;
-	TNuevo  nuevolibro_1_arg;
-	int  *result_6;
-	TComRet  comprar_1_arg;
-	int  *result_7;
-	TComRet  retirar_1_arg;
-	bool_t  *result_8;
-	TOrdenacion  ordenar_1_arg;
-	int  *result_9;
-	int  nlibros_1_arg;
-	int  *result_10;
-	TConsulta  buscar_1_arg;
-	TLibro  *result_11;
-	TPosicion  descargar_1_arg;
-	int  *result_12;
-	TPosicion  prestar_1_arg;
-	int  *result_13;
-	TPosicion  devolver_1_arg;
+	int *result_1;
+	char conexion_1_arg;
+	bool_t *result_2;
+	int desconexion_1_arg;
+	int *result_3;
+	TFichero cargardatos_1_arg;
+	bool_t *result_4;
+	int guardardatos_1_arg;
+	int *result_5;
+	TNuevo nuevolibro_1_arg;
+	int *result_6;
+	TComRet comprar_1_arg;
+	int *result_7;
+	TComRet retirar_1_arg;
+	bool_t *result_8;
+	TOrdenacion ordenar_1_arg;
+	int *result_9;
+	int nlibros_1_arg;
+	int *result_10;
+	TConsulta buscar_1_arg;
+	TLibro *result_11;
+	TPosicion descargar_1_arg;
+	int *result_12;
+	TPosicion prestar_1_arg;
+	int *result_13;
+	TPosicion devolver_1_arg;
 
-#ifndef	DEBUG
-	clnt = clnt_create (host, GESTORBIBLIOTECA, GESTORBIBLIOTECA_VER, "udp");
-	if (clnt == NULL) {
-		clnt_pcreateerror (host);
-		exit (1);
+#ifndef DEBUG
+	clnt = clnt_create(host, GESTORBIBLIOTECA, GESTORBIBLIOTECA_VER, "udp");
+	if (clnt == NULL)
+	{
+		clnt_pcreateerror(host);
+		exit(1);
 	}
-#endif	/* DEBUG */
+#endif /* DEBUG */
 
 	result_1 = conexion_1(&conexion_1_arg, clnt);
-	if (result_1 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_1 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_2 = desconexion_1(&desconexion_1_arg, clnt);
-	if (result_2 == (bool_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_2 == (bool_t *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_3 = cargardatos_1(&cargardatos_1_arg, clnt);
-	if (result_3 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_3 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_4 = guardardatos_1(&guardardatos_1_arg, clnt);
-	if (result_4 == (bool_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_4 == (bool_t *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_5 = nuevolibro_1(&nuevolibro_1_arg, clnt);
-	if (result_5 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_5 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_6 = comprar_1(&comprar_1_arg, clnt);
-	if (result_6 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_6 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_7 = retirar_1(&retirar_1_arg, clnt);
-	if (result_7 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_7 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_8 = ordenar_1(&ordenar_1_arg, clnt);
-	if (result_8 == (bool_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_8 == (bool_t *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_9 = nlibros_1(&nlibros_1_arg, clnt);
-	if (result_9 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_9 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_10 = buscar_1(&buscar_1_arg, clnt);
-	if (result_10 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_10 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_11 = descargar_1(&descargar_1_arg, clnt);
-	if (result_11 == (TLibro *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_11 == (TLibro *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_12 = prestar_1(&prestar_1_arg, clnt);
-	if (result_12 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_12 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
 	result_13 = devolver_1(&devolver_1_arg, clnt);
-	if (result_13 == (int *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (result_13 == (int *)NULL)
+	{
+		clnt_perror(clnt, "call failed");
 	}
-#ifndef	DEBUG
-	clnt_destroy (clnt);
-#endif	 /* DEBUG */
+#ifndef DEBUG
+	clnt_destroy(clnt);
+#endif /* DEBUG */
 }
 
-
-int
-main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	char *host;
 
-	if (argc < 2) {
-		printf ("usage: %s server_host\n", argv[0]);
-		exit (1);
+	if (argc < 2)
+	{
+		printf("usage: %s server_host\n", argv[0]);
+		exit(1);
 	}
 	host = argv[1];
-	gestorbiblioteca_1 (host);
-exit (0);
+	gestorbiblioteca_1(host);
+	exit(0);
 }
