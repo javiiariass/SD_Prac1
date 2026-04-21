@@ -8,8 +8,249 @@
 
 // establece la codificación del sistema al programa
 #include "autolocale.h"
+
+//  librerias importadas por el profesor
+// #include <stdlib.h>
+// #include <time.h>
+// #include <string.h>
+// #include <stdio.h>
+#include <ctype.h>
+
+#define Cls system("clear")
+#define Pause system("read -p \"Pulsa la tecla return para continuar..... \" a")
+#define MostrarAviso(Texto) \
+	{                       \
+		printf(Texto);      \
+		Pause;              \
+	}
+// ******************************************** Variables globales ********************************************
+int ida = -1;
 // ******************************************** MENUS ********************************************
 
+int MenuPrincipal()
+{
+	int Salida;
+	do
+	{
+		Cls;
+		printf(" GESTOR BIBLIOTECARIO 1.0 (M. PRINCIPAL)\n");
+		printf("*****************************************\n");
+		printf("\t1.- M. Administración\n");
+		printf("\t2.- Consulta de libros\n");
+		printf("\t3.- Préstamo de libros\n");
+		printf("\t4.- Devolución de libros\n");
+		printf("\t0.- Salir\n\n");
+		printf(" Elige opción: ");
+		scanf("%d", &Salida);
+		if (Salida < 0 || Salida > 4)
+			MostrarAviso("\n\n *** Error en la entrada de Datos.***\n\n");
+	} while (Salida < 0 || Salida > 4);
+	return Salida;
+}
+
+int MenuAdministracion()
+{
+	int Salida;
+	do
+	{
+		Cls;
+		printf(" GESTOR BIBLIOTECARIO 1.0 (M. ADMINISTRACION)\n");
+		printf("**********************************************\n");
+		printf("\t1.- Cargar datos Biblioteca\n");
+		printf("\t2.- Guardar datos Biblioteca\n");
+		printf("\t3.- Nuevo libro\n");
+		printf("\t4.- Comprar libros\n");
+		printf("\t5.- Retirar libros\n");
+		printf("\t6.- Ordenar libros\n");
+		printf("\t7.- Buscar libros\n");
+		printf("\t8.- Listar libros\n");
+		printf("\t0.- Salir\n\n");
+		printf(" Elige opción: ");
+		scanf("%d", &Salida);
+		if (Salida < 0 || Salida > 8)
+			MostrarAviso("\n\n *** Error en la entrada de Datos.***\n\n");
+	} while (Salida < 0 || Salida > 8);
+	return Salida;
+}
+
+// ******************************************** funciones auxiliares ********************************************
+
+/* Función que formatea un texto a un ancho determinado */
+void Formatea(char *Salida, const char *Texto, int Ancho, char Caracter)
+{
+	Cadena Vacia;
+	int len = Ancho - strlen(Texto);
+	int l = 0, c = 0;
+
+	while (Texto[l] != '\0')
+	{
+		if ((unsigned char)Texto[l] > 128)
+			c++;
+		l++;
+	}
+	len += c / 2;
+
+	if (len < 0)
+		len = 0;
+	for (int i = 0; i < len; i++)
+		Vacia[i] = Caracter;
+	Vacia[len] = '\0';
+
+	sprintf(Salida, "%s%s", Texto, Vacia);
+}
+
+/* Función que muestra tabulado los campos del libro L con la opción de poner la cabecera */
+void MostrarLibro(TLibro *L, int Pos, bool_t Cabecera)
+{
+	Cadena T, A, B, PI;
+	if (Cabecera == TRUE)
+	{
+		printf("%-*s%-*s%-*s%*s%*s%*s\n", 5, "POS", 58, "TITULO", 18, "ISBN", 4, "DIS", 4, "PRE", 4, "RES");
+		printf("     %-*s%-*s%-*s\n", 30, "AUTOR", 28, "PAIS (IDIOMA)", 12, "AÑO");
+		Formatea(B, "*", 93, '*');
+		printf("%s\n", B);
+	}
+	Formatea(T, L->Titulo, 58, ' ');
+	Formatea(A, L->Autor, 30, ' ');
+	strcpy(B, L->Pais);
+	strcat(B, "(");
+	strcat(B, L->Idioma);
+	strcat(B, ")");
+	Formatea(PI, B, 28, ' ');
+	printf("%-5d%s%-*s%*d%*d%*d\n", Pos + 1, T, 18, L->Isbn, 4, L->NoLibros, 4, L->NoPrestados, 4, L->NoListaEspera);
+	printf("     %s%s%-*d\n", A, PI, 12, L->Anio);
+}
+
+/*Función que devuelve TRUE si el Campo correspondiente de Libro L contiene el Texto.
+Se utiliza para Buscar libros. */
+bool_t Comprobar(TLibro *L, Cadena Texto, char Campo)
+{
+	bool_t Encontrado = FALSE;
+	switch (tolower(Campo))
+	{
+	case 'i':
+		Encontrado = strstr(L->Isbn, Texto) != NULL ? TRUE : FALSE;
+		break;
+	case 't':
+		Encontrado = strstr(L->Titulo, Texto) != NULL ? TRUE : FALSE;
+		break;
+	case 'a':
+		Encontrado = strstr(L->Autor, Texto) != NULL ? TRUE : FALSE;
+		break;
+	case 'p':
+		Encontrado = strstr(L->Pais, Texto) != NULL ? TRUE : FALSE;
+		break;
+	case 'd':
+		Encontrado = strstr(L->Idioma, Texto) != NULL ? TRUE : FALSE;
+		break;
+	case '*':
+		Encontrado = (strstr(L->Isbn, Texto) != NULL || strstr(L->Titulo, Texto) != NULL || strstr(L->Autor, Texto) != NULL ||
+					  strstr(L->Pais, Texto) != NULL || strstr(L->Idioma, Texto) != NULL)
+						 ? TRUE
+						 : FALSE;
+	}
+	return Encontrado;
+}
+
+// Comprobar la llamada como lo hace gestorbiblioteca_1
+bool_t comprueba_llamada(void *resultado, CLIENT *clnt)
+{
+	if (resultado == NULL)
+	{
+		clnt_perror(clnt, "call failed");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+// ******************************************** manejar servicios ********************************************
+
+static void maneja_desconexion(CLIENT *clnt)
+{
+	bool_t *resultado;
+	if (ida == -1)
+		return;
+
+	resultado = desconexion_1(&ida, clnt);
+	if (*resultado)
+	{
+		ida = -1;
+		MostrarAviso("Admin desconectado con éxito.\n");
+	}
+	else
+		MostrarAviso("Error desconectando admin");
+}
+
+static void maneja_menu_admin(CLIENT *clnt)
+{
+	int opcion;
+
+	do
+	{
+		opcion = MenuAdministracion();
+		switch (opcion)
+		{
+		case 1:
+			// TODO cargar datos
+			break;
+		case 2:
+			// TODO guardar datos
+			break;
+		case 3:
+			// TODO nuevo libro
+			break;
+		case 4:
+			// TODO comprar libros
+			break;
+		case 5:
+			// TODO retirar libros
+			break;
+		case 6:
+			// TODO ordenar libros
+			break;
+		case 7:
+			// TODO buscar libros
+			break;
+		case 8:
+			// TODO listar libros
+			break;
+		case 0:
+			maneja_desconexion(clnt);
+			break;
+		default:
+			break;
+		}
+
+	} while (opcion != 0);
+}
+
+static void maneja_conexion(CLIENT *clnt)
+{
+	int *resultado;
+	// pedir clave
+	Cadena clave;
+	printf("Introduzca la contraseña de asdministrador: ");
+	scanf("%s", clave);
+
+	resultado = conexion_1(clave, clnt);
+	if (!comprueba_llamada(resultado, clnt))
+		return;
+
+	switch (*resultado)
+	{
+	case -1:
+		MostrarAviso("Error. Ya hay un usuario identificado como administrador.\n");
+		break;
+	case -2:
+		MostrarAviso("Error. Contraseña incorrecta.\n");
+		break;
+	default:
+		MostrarAviso("Accediendo a menú administración.\n");
+		ida = *resultado;
+		maneja_menu_admin(clnt);
+		break;
+	}
+}
 
 
 void gestorbiblioteca_1(char *host)
@@ -43,7 +284,7 @@ void gestorbiblioteca_1(char *host)
 	TPosicion devolver_1_arg;
 
 #ifndef DEBUG
-	clnt = clnt_create(host, GESTORBIBLIOTECA, GESTORBIBLIOTECA_VER, "udp");
+	clnt = clnt_create(host, GESTORBIBLIOTECA, GESTORBIBLIOTECA_VER, "tcp");
 	if (clnt == NULL)
 	{
 		clnt_pcreateerror(host);
@@ -123,14 +364,55 @@ void gestorbiblioteca_1(char *host)
 
 int main(int argc, char *argv[])
 {
-	char *host;
 
+	// ------------------------ iniciar conexcion ------------------------
+
+	// Comprobamos si ha pasado un argumento de ejecución
 	if (argc < 2)
 	{
 		printf("usage: %s server_host\n", argv[0]);
 		exit(1);
 	}
-	host = argv[1];
-	gestorbiblioteca_1(host);
+
+	// obtenemos host desde argumento de ejecución
+	char *host = argv[1];
+
+	CLIENT *clnt = clnt_create(host, GESTORBIBLIOTECA, GESTORBIBLIOTECA_VER, "tcp");
+
+	// Controlar fallo al crear
+	if (clnt == NULL)
+	{
+		clnt_pcreateerror(host);
+		exit(1);
+	}
+	MostrarAviso("Conexión con el servidor exitosa\n");
+
+	// ------------------------ Ejecucion menu ------------------------
+
+	// variables
+	int *resultado_rpc;
+	int opcion;
+	int idAdmin;
+
+	do
+	{
+
+		opcion = MenuPrincipal();
+		switch (opcion)
+		{
+		case 1:
+			maneja_conexion(clnt);
+			break;
+		case 2:
+			break;
+
+		default:
+			// MenuPrincipal() ya controla que opcion esté acotada a las opciones del switch
+			break;
+		}
+
+	} while (opcion != 0);
+
+	clnt_destroy(clnt);
 	exit(0);
 }
