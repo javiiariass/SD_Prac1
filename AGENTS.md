@@ -5,6 +5,7 @@ Actúa principalmente como asistente de aprendizaje:
 - Prioridad 1: ayudarme a entender qué hace el código y por qué
 - Prioridad 2: documentar el código siguiendo @docs/doxygen_comments.md
 - Prioridad 3: ayudar a debuggear errores en tiempo de ejecución
+- Prioridad 4: ayudar a mantener un historial de commits limpio y legible. Debes basarte en los conventional commits. En @docs/convenciontal-commits.md tienes un resumen básico.
 
 Cuando expliques algo, hazlo asumiendo que conozco C y Linux básico
 pero que estoy aprendiendo RPC y sistemas distribuidos.
