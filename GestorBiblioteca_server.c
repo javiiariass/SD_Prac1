@@ -30,10 +30,11 @@ static const char *clave_admin = "12"; /**< Constraseña de asministrador solici
 // *********************************** Funciones auxiliares ***********************************
 
 /**
- * @brief Genera una id aleatoria para administrador y la establece
- * en la variable global IdAdmin
+ * @brief Genera un identificador aleatorio para el administrador.
  *
- * @return id aleatoria que ha sido generada
+ * Genera un número aleatorio y lo establece en la variable global IdAdmin.
+ *
+ * @return Identificador aleatorio generado.
  */
 static int genera_id_admin()
 {
@@ -42,10 +43,25 @@ static int genera_id_admin()
 	return IdAdmin;
 }
 
+/**
+ * @brief Comprueba si el identificador pasado coincide con el del administrador.
+ *
+ * @param[in] id  Identificador de sesión a comprobar.
+ * @return        TRUE si coincide con IdAdmin y es mayor de 0, FALSE en caso contrario.
+ */
 static bool_t comprueda_id_admin(int id)
 {
 	return (id == IdAdmin && id > 0);
 }
+
+/**
+ * @brief Guarda la biblioteca actual en el fichero binario asociado.
+ *
+ * Utiliza el nombre de fichero almacenado en NomFichero y reemplaza su
+ * contenido con los elementos que actualmente están en el vector dinámico Biblioteca.
+ *
+ * @return TRUE si la escritura fue exitosa, FALSE en caso de error.
+ */
 static bool_t guardar_fichero_datos()
 {
 
@@ -97,6 +113,17 @@ static bool_t guardar_fichero_datos()
 	fclose(archivo);
 	return TRUE;
 }
+
+/**
+ * @brief Carga en memoria dinámica el contenido de la biblioteca desde un fichero.
+ *
+ * Libera cualquier biblioteca previamente cargada. Después, lee el fichero
+ * indicado en bloques mediante la constante INCREMENTO_TAMA, guarda sus datos en
+ * el vector dinámico Biblioteca y actualiza las variables globales necesarias.
+ *
+ * @param[in] nombreArchivo  Nombre del fichero binario a cargar (con ruta relativa).
+ * @return                   1 si la carga y asignación de memoria fueron exitosas, 0 en caso de error.
+ */
 static int cargar_fichero_datos(const char *nombreArchivo)
 {
 	// Liberamos vector dinámico si ya hay uno
@@ -217,8 +244,7 @@ int *conexion_1_svc(char *argp, struct svc_req *rqstp)
  *
  * @warning El valor devuelto apunta a memoria estática. No liberar.
  */
-bool_t *
-desconexion_1_svc(int *argp, struct svc_req *rqstp)
+bool_t *desconexion_1_svc(int *argp, struct svc_req *rqstp)
 {
 	static bool_t result;
 
