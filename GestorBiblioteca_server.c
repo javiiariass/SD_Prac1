@@ -493,9 +493,25 @@ TLibro *descargar_1_svc(TPosicion *argp, struct svc_req *rqstp)
 {
 	static TLibro result;
 
-	/*
-	 * insert server code here
-	 */
+	// Comprobar si la posición es correcta
+	if (argp->Pos < 0 || argp->Pos >= NumLibros) {
+		strcpy(result.Isbn, "????");
+		strcpy(result.Titulo, "????");
+		strcpy(result.Autor, "????");
+		result.Anio = 0;
+		strcpy(result.Pais, "????");
+		strcpy(result.Idioma, "????");
+		result.NoLibros = 0;
+		result.NoPrestados = 0;
+		result.NoListaEspera = 0;
+	} else {
+		result = Biblioteca[argp->Pos];
+
+		if (!comprueda_id_admin(argp->Ida)) {
+			result.NoPrestados = 0;
+			result.NoListaEspera = 0;
+		}
+	}
 
 	return &result;
 }
