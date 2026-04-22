@@ -236,6 +236,9 @@ static void maneja_desconexion(CLIENT *clnt)
 		return;
 
 	resultado = desconexion_1(&ida, clnt);
+	if (!comprueba_llamada(resultado, clnt))
+		return;
+
 	if (*resultado)
 	{
 		ida = -1;
@@ -243,6 +246,91 @@ static void maneja_desconexion(CLIENT *clnt)
 	}
 	else
 		MostrarAviso("Error desconectando admin");
+}
+
+static void maneja_carga_datos(CLIENT *clnt)
+{
+
+	// Comprobamos si el servidor tiene libros para avisar que se sobreescribe
+	// int *num_libros = nlibros_1(&ida, clnt);
+	int num_libros = 1;
+	// if (num_libros != NULL && *num_libros > 0)
+	if (num_libros == 1) // TODO CAMBIAR cuando implemente nlibros en servidor
+	{
+		char respuesta;
+		printf("CUIDADO. Ya hay %d datos cargados, si continúa sobreescribirá los datos existentes.\n", num_libros);
+		printf("¿Desea continuar (s/N)?: ");
+		scanf(" %c", &respuesta);
+
+		// cualquier cosa que no sea 'S' o 's' se toma como un no
+		if (tolower(respuesta) != 's')
+		{
+			printf("Operación abortada\n");
+			Pause;
+			return;
+		}
+	}
+
+	// cargamos datos
+
+	Cadena nombre_fichero;
+	TFichero parametros_fichero;
+
+	// pedimos nombre fichero
+	printf("Introduzca nombre del fichero a cargar: ");
+	scanf("%s", parametros_fichero.NomFile);
+
+	// Si se llama desde menú admin no debería 'ida' ser -1 -> no lo controlo
+	// if (ida == -1)...
+	parametros_fichero.Ida = ida;
+
+	int *resultado = cargardatos_1(&parametros_fichero, clnt);
+
+	if (!comprueba_llamada(resultado, clnt))
+		return;
+
+	switch (*resultado)
+	{
+	case 1:
+		printf("Datos cargados y ordenados correctamente.\n");
+		break;
+	case 0:
+		printf("Error abriendo fichero o error de memoria dinámica.\n");
+		break;
+	case -1:
+		printf("No hay administrador válido o Ida no coincide con el servidor.\n");
+		break;
+	}
+}
+
+static void maneja_guarda_datos(CLIENT *clnt)
+{
+	char respuesta;
+	printf("ATENCIÓN. Guardando el archivo sobreescribirá los datos existentes en él.\n");
+	printf("¿Desea continuar (s/N)?: ");
+	scanf(" %c", &respuesta);
+
+	// cualquier cosa que no sea 'S' o 's' se toma como un no
+	if (tolower(respuesta) != 's')
+	{
+		printf("Operación abortada\n");
+		Pause;
+		return;
+	}
+
+	// guardamos datos
+	bool_t *resultado = guardardatos_1(&ida, clnt);
+
+	if (!comprueba_llamada(resultado, clnt))
+		return;
+
+	if (*resultado)
+		printf("Archivo guardado con éxito\n");
+	else
+	{
+		printf("Error. Posibles errores: \n- Id admin incorrecta o No hay administrador válido.\n");
+		printf("- No hay fichero abierto.\n- Error abriendo o escribiendo archivo.\n");
+	}
 }
 
 /**
@@ -263,17 +351,15 @@ static void maneja_menu_admin(CLIENT *clnt)
 		switch (opcion)
 		{
 		case 1:
-			// TODO cargar datos
-			// Si ya hay un vector cargado avisar que se va a borrar
-			// int borroVector = 1;
-			// if (Biblioteca != NULL)
-			// {
-			// 	printf("CUIDADO. Ya hay datos cargados, si continúa sobreescribirá los datos existentes.\n¿Desea continuar (S/n)?: ");
-			// }
+
+			maneja_carga_datos(clnt);
 			break;
+
 		case 2:
-			// TODO guardar datos
+
+			maneja_guarda_datos(clnt);
 			break;
+
 		case 3:
 			// TODO nuevo libro
 			break;
