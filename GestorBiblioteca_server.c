@@ -49,7 +49,8 @@ static bool_t comprueda_id_admin(int id)
 static bool_t guardar_fichero_datos()
 {
 
-	if(strlen(NomFichero) == 0){
+	if (strlen(NomFichero) == 0)
+	{
 		printf("No hay ningún fichero abierto. Abra primero una Biblioteca.\n");
 		return FALSE;
 	}
@@ -75,7 +76,7 @@ static bool_t guardar_fichero_datos()
 	//  | ----------------- | ------- | ------- | --- | --------- | ------- |
 
 	int resultado_escritura = fwrite(&NumLibros, sizeof(int), 1, archivo);
-	
+
 	// fwrite devuelve el número de elementos escritos
 	if (resultado_escritura != 1)
 	{
@@ -83,19 +84,18 @@ static bool_t guardar_fichero_datos()
 		fclose(archivo);
 		return FALSE;
 	}
-	
+
 	resultado_escritura = fwrite(Biblioteca, sizeof(TLibro), NumLibros, archivo);
-	
+
 	if (resultado_escritura != NumLibros)
 	{
 		printf("Error escribiendo elementos de %s", rutaCompleta);
 		fclose(archivo);
 		return FALSE;
 	}
-	
+
 	fclose(archivo);
 	return TRUE;
-	
 }
 static int cargar_fichero_datos(const char *nombreArchivo)
 {
@@ -279,8 +279,7 @@ int *cargardatos_1_svc(TFichero *argp, struct svc_req *rqstp)
  *
  * @warning El valor devuelto apunta a memoria estática. No liberar.
  */
-bool_t *
-guardardatos_1_svc(int *argp, struct svc_req *rqstp)
+bool_t *guardardatos_1_svc(int *argp, struct svc_req *rqstp)
 {
 	static bool_t result;
 
@@ -393,8 +392,7 @@ int *retirar_1_svc(TComRet *argp, struct svc_req *rqstp)
  *
  * @warning El valor devuelto apunta a memoria estática. No liberar.
  */
-bool_t *
-ordenar_1_svc(TOrdenacion *argp, struct svc_req *rqstp)
+bool_t *ordenar_1_svc(TOrdenacion *argp, struct svc_req *rqstp)
 {
 	static bool_t result;
 
@@ -465,8 +463,7 @@ int *buscar_1_svc(TConsulta *argp, struct svc_req *rqstp)
  *
  * @warning El valor devuelto apunta a memoria estática. No liberar.
  */
-TLibro *
-descargar_1_svc(TPosicion *argp, struct svc_req *rqstp)
+TLibro *descargar_1_svc(TPosicion *argp, struct svc_req *rqstp)
 {
 	static TLibro result;
 
