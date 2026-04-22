@@ -141,18 +141,18 @@ static int cargar_fichero_datos(const char *nombreArchivo)
 	Cadena rutaCompleta;
 	strcpy(rutaCompleta, RUTA_FICHEROS);
 	strcat(rutaCompleta, nombreArchivo);
-	printf("Ruta del archivo a abrir: %s", rutaCompleta);
+	printf("Ruta del archivo a abrir: %s\n", rutaCompleta);
 
 	FILE *archivo = fopen(rutaCompleta, "rb");
 
 	// si falla devuelve NULL
 	if (archivo == NULL)
 	{
-		printf("Error abriendo archivo %s", rutaCompleta);
+		printf("Error abriendo archivo %s\n", rutaCompleta);
 		return 0;
 	}
 
-	printf("Archivo %s abierto con éxito. Leyendo...", rutaCompleta);
+	printf("Archivo %s abierto con éxito. Leyendo...\n", rutaCompleta);
 
 	// Estructura de archivo
 	// 	| N (num de Libros) | Libro 1 | Libro 2 | ··· | Libro N-1 | Libro N |
@@ -167,7 +167,7 @@ static int cargar_fichero_datos(const char *nombreArchivo)
 	// fread devuelve el número de elementos leídos.
 	if (resultado_lectura != 1)
 	{
-		printf("Error leyendo elementos de %s", rutaCompleta);
+		printf("Error leyendo elementos de %s\n", rutaCompleta);
 		fclose(archivo);
 		return 0;
 	}
@@ -177,7 +177,7 @@ static int cargar_fichero_datos(const char *nombreArchivo)
 
 	if (Biblioteca_auxiliar == NULL)
 	{
-		printf("Error reservando memoria para vector de archivo %s", rutaCompleta);
+		printf("Error reservando memoria para vector de archivo %s\n", rutaCompleta);
 		fclose(archivo);
 		return 0;
 	}
@@ -186,13 +186,13 @@ static int cargar_fichero_datos(const char *nombreArchivo)
 
 	if (resultado_lectura != numero_libros)
 	{
-		printf("Error leyendo elementos de %s", rutaCompleta);
+		printf("Error leyendo elementos de %s\n", rutaCompleta);
 		free(Biblioteca_auxiliar);
 		fclose(archivo);
 		return 0;
 	}
 
-	printf("Biblioteca %s cargada con exito", rutaCompleta);
+	printf("Biblioteca %s cargada con exito\n", rutaCompleta);
 	Biblioteca = Biblioteca_auxiliar;
 	NumLibros = numero_libros;
 	Tama = tamanyo_vector;
@@ -436,27 +436,23 @@ bool_t *ordenar_1_svc(TOrdenacion *argp, struct svc_req *rqstp)
  * vector dinámico (NumLibros). No verifica el Ida pasado por parámetro.
  *
  * @param[in] argp   Puntero al Identificador de Administración (Ida).
- * @param rqstp      Estructura de petición de rpcgen (no usada).
+ * @param rqstp      Estructura de petición de rpcgen.
  * @return           Puntero a entero con el número de libros actual.
  *
  * @warning El valor devuelto apunta a memoria estática. No liberar.
  */
 int *nlibros_1_svc(int *argp, struct svc_req *rqstp)
 {
-	static int result;
+	// static int result = NumLibros;
 
-	/*
-	 * insert server code here
-	 */
-
-	return &result;
+	return &NumLibros;
 }
 
 /**
  * @brief Busca la posición de un libro en el vector a partir de su ISBN.
  *
  * @param[in] argp   Puntero a estructura TConsulta con Ida e ISBN buscado.
- * @param rqstp      Estructura de petición de rpcgen (no usada).
+ * @param rqstp      Estructura de petición de rpcgen.
  * @return           Puntero a entero con el resultado:
  *                   - -2: No hay administrador válido o Ida erróneo.
  *                   - -1: No se ha encontrado ningún libro con el ISBN indicado.
