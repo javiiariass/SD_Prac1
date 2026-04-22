@@ -256,13 +256,13 @@ static void maneja_carga_datos(CLIENT *clnt)
 {
 
 	// Comprobamos si el servidor tiene libros para avisar que se sobreescribe
-	// int *num_libros = nlibros_1(&ida, clnt);
-	int num_libros = 1;
-	// if (num_libros != NULL && *num_libros > 0)
-	if (num_libros == 1) // TODO CAMBIAR cuando implemente nlibros en servidor
+	int *num_libros = nlibros_1(&ida, clnt);
+
+	// if (num_libros == 1) // TODO CAMBIAR cuando implemente nlibros en servidor
+	if (comprueba_llamada(num_libros, clnt) && *num_libros > 0)
 	{
 		char respuesta;
-		printf("CUIDADO. Ya hay %d datos cargados, si continúa sobreescribirá los datos existentes.\n", num_libros);
+		printf("CUIDADO. Ya hay %d datos cargados, si continúa sobreescribirá los datos existentes.\n", *num_libros);
 		printf("¿Desea continuar (s/N)?: ");
 		scanf(" %c", &respuesta);
 
@@ -338,6 +338,49 @@ static void maneja_guarda_datos(CLIENT *clnt)
 }
 
 /**
+ * @brief Lista todos los libros de la biblioteca por pantalla.
+ *
+ * Invoca al servicio nlibros_1 para saber la cantidad de libros y luego
+ * itera llamando al servicio descargar_1 por cada posición, mostrando los
+ * resultados por pantalla.
+ *
+ * @param[in,out] clnt  Handle del cliente RPC (struct CLIENT).
+ */
+static void maneja_listar_libros(CLIENT *clnt)
+{
+	int i;
+	TPosicion posicion_actual;
+	TLibro *libro;
+	int *num_libros = nlibros_1(&ida, clnt);
+
+	if (!comprueba_llamada(num_libros, clnt))
+		return;
+
+	if (*num_libros == 0)
+	{
+		printf("\nLa biblioteca está vacía.\n");
+		return;
+	}
+
+	// MostrarAviso("Mostrando libros\n");
+	Cls;
+	posicion_actual.Ida = ida;
+	for (i = 0; i < *num_libros; i++)
+	{
+		posicion_actual.Pos = i;
+
+		libro = descargar_1(&posicion_actual, clnt);
+		if (!comprueba_llamada(libro, clnt))
+			return;
+
+		// Muestra cabecera en el primer libro 
+		MostrarLibro(libro, i, (i == 0) ? TRUE : FALSE);
+	}
+
+	MostrarAviso("\n");
+}
+
+/**
  * @brief Implementa el bucle de opciones de administración y lanza las peticiones.
  *
  * Muestra el menú de administración del sistema repetidamente. Ante cada opción
@@ -380,7 +423,7 @@ static void maneja_menu_admin(CLIENT *clnt)
 			// TODO buscar libros
 			break;
 		case 8:
-			// TODO listar libros
+			maneja_listar_libros(clnt);
 			break;
 		case 0:
 			maneja_desconexion(clnt);
