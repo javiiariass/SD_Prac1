@@ -27,6 +27,14 @@
 int ida = -1;
 // ******************************************** MENUS ********************************************
 
+/**
+ * @brief Muestra el menú principal de la aplicación y captura la opción del usuario.
+ *
+ * Presenta las opciones básicas (Administración, Consulta, Préstamo, Devolución)
+ * e impide que el usuario introduzca una opción fuera de rango.
+ *
+ * @return Opción seleccionada por el usuario (entero entre 0 y 4).
+ */
 int MenuPrincipal()
 {
 	int Salida;
@@ -48,6 +56,14 @@ int MenuPrincipal()
 	return Salida;
 }
 
+/**
+ * @brief Despliega el menú de administración y lee la opción seleccionada.
+ *
+ * Muestra opciones como cargar datos, nuevo libro, comprar, etc., y se asegura
+ * de devolver un valor dentro de los límites esperados.
+ *
+ * @return Opción elegida por el administrador (entero entre 0 y 8).
+ */
 int MenuAdministracion()
 {
 	int Salida;
@@ -75,7 +91,17 @@ int MenuAdministracion()
 
 // ******************************************** funciones auxiliares ********************************************
 
-/* Función que formatea un texto a un ancho determinado */
+/**
+ * @brief Formatea un texto a un ancho determinado rellenando con un carácter.
+ *
+ * Utilizada para alinear texto en consola, asumiendo ciertas longitudes de las
+ * cadenas y tratando caracteres extendidos (como UTF-8).
+ *
+ * @param[out] Salida    Cadena donde se devolverá el resultado formateado.
+ * @param[in]  Texto     Cadena de entrada original.
+ * @param[in]  Ancho     Anchura final esperada.
+ * @param[in]  Caracter  Carácter empleado para rellenar los espacios restantes.
+ */
 void Formatea(char *Salida, const char *Texto, int Ancho, char Caracter)
 {
 	Cadena Vacia;
@@ -99,7 +125,16 @@ void Formatea(char *Salida, const char *Texto, int Ancho, char Caracter)
 	sprintf(Salida, "%s%s", Texto, Vacia);
 }
 
-/* Función que muestra tabulado los campos del libro L con la opción de poner la cabecera */
+/**
+ * @brief Muestra tabulados los campos de un libro con opción a imprimir la cabecera.
+ *
+ * Emplea funciones de formato de texto para imprimir ordenadamente la tabla
+ * de libros y su correspondiente fila.
+ *
+ * @param[in] L         Puntero a la estructura TLibro que se va a mostrar.
+ * @param[in] Pos       Índice o posición del libro en la lista (indexado desde 0).
+ * @param[in] Cabecera  Si es TRUE, imprime los nombres de las columnas antes del libro.
+ */
 void MostrarLibro(TLibro *L, int Pos, bool_t Cabecera)
 {
 	Cadena T, A, B, PI;
@@ -121,8 +156,19 @@ void MostrarLibro(TLibro *L, int Pos, bool_t Cabecera)
 	printf("     %s%s%-*d\n", A, PI, 12, L->Anio);
 }
 
-/*Función que devuelve TRUE si el Campo correspondiente de Libro L contiene el Texto.
-Se utiliza para Buscar libros. */
+/**
+ * @brief Comprueba si el texto especificado existe dentro de un campo del libro.
+ *
+ * Busca de forma estricta o total ('*') si la sub-cadena `Texto`
+ * aparece en un campo (ISBN, título, autor...). Resulta fundamental para la
+ * implementación de búsquedas.
+ *
+ * @param[in] L      Puntero a estructura TLibro sobre el que se va a buscar.
+ * @param[in] Texto  Sub-cadena de la cual se desea comprobar la ocurrencia.
+ * @param[in] Campo  Letra que indica el filtro a aplicar:
+ *                   - 'i': ISBN, 't': Título, 'a': Autor, 'p': País, 'd': Idioma, '*': Cualquier campo.
+ * @return           TRUE si contiene el texto indicado, o FALSE en caso contrario.
+ */
 bool_t Comprobar(TLibro *L, Cadena Texto, char Campo)
 {
 	bool_t Encontrado = FALSE;
@@ -152,7 +198,17 @@ bool_t Comprobar(TLibro *L, Cadena Texto, char Campo)
 	return Encontrado;
 }
 
-// Comprobar la llamada como lo hace gestorbiblioteca_1
+/**
+ * @brief Comprueba que la respuesta de una llamada RPC no sea NULL.
+ *
+ * Si es nula, significa que hubo un error de comunicación RPC, por lo que
+ * se informa al usuario mediante clnt_perror sobre el fallo antes de volver
+ * a la rutina normal.
+ *
+ * @param[in] resultado Puntero con el resultado estático de una llamada RPC.
+ * @param[in] clnt      Puntero opaco al handle del cliente (struct CLIENT).
+ * @return              TRUE si `resultado` es distinto de NULL, FALSE en caso contrario.
+ */
 bool_t comprueba_llamada(void *resultado, CLIENT *clnt)
 {
 	if (resultado == NULL)
@@ -165,6 +221,14 @@ bool_t comprueba_llamada(void *resultado, CLIENT *clnt)
 
 // ******************************************** manejar servicios ********************************************
 
+/**
+ * @brief Gestiona la desconexión del administrador enviando la petición al servidor.
+ *
+ * Se invoca a `desconexion_1` usando el ID global `ida`. Si tiene éxito,
+ * reinicia la variable a `-1`.
+ *
+ * @param[in,out] clnt  Handle del cliente RPC (struct CLIENT).
+ */
 static void maneja_desconexion(CLIENT *clnt)
 {
 	bool_t *resultado;
@@ -181,6 +245,14 @@ static void maneja_desconexion(CLIENT *clnt)
 		MostrarAviso("Error desconectando admin");
 }
 
+/**
+ * @brief Implementa el bucle de opciones de administración y lanza las peticiones.
+ *
+ * Muestra el menú de administración del sistema repetidamente. Ante cada opción
+ * realiza las acciones y llamadas RPC correspondientes hasta elegir 0 (desconectar).
+ *
+ * @param[in,out] clnt Handle del cliente para comunicación RPC (struct CLIENT).
+ */
 static void maneja_menu_admin(CLIENT *clnt)
 {
 	int opcion;
@@ -192,6 +264,12 @@ static void maneja_menu_admin(CLIENT *clnt)
 		{
 		case 1:
 			// TODO cargar datos
+			// Si ya hay un vector cargado avisar que se va a borrar
+			// int borroVector = 1;
+			// if (Biblioteca != NULL)
+			// {
+			// 	printf("CUIDADO. Ya hay datos cargados, si continúa sobreescribirá los datos existentes.\n¿Desea continuar (S/n)?: ");
+			// }
 			break;
 		case 2:
 			// TODO guardar datos
@@ -224,13 +302,24 @@ static void maneja_menu_admin(CLIENT *clnt)
 	} while (opcion != 0);
 }
 
+/**
+ * @brief Gestiona la conexión del administrador solicitando clave de acceso.
+ *
+ * Muestra el prompt, lee la clave, llama a la función `conexion_1` del
+ * servidor y si recibe un id válido establece la variable global `ida`.
+ *
+ * @param[in,out] clnt El handle del cliente para RPC (struct CLIENT).
+ */
 static void maneja_conexion(CLIENT *clnt)
 {
 	int *resultado;
 	// pedir clave
-	Cadena clave;
-	printf("Introduzca la contraseña de asdministrador: ");
-	scanf("%s", clave);
+	// Cadena clave;
+	// printf("Introduzca la contraseña de asdministrador: ");
+	// scanf("%s", clave);
+
+	// TODO descomentar solicitar por teclado contraseña cuando todo esté acabado
+	Cadena clave = "12";
 
 	resultado = conexion_1(clave, clnt);
 	if (!comprueba_llamada(resultado, clnt))
@@ -252,7 +341,15 @@ static void maneja_conexion(CLIENT *clnt)
 	}
 }
 
-
+/**
+ * @brief Función esqueleto generada por rpcgen para probar las llamadas.
+ *
+ * Contiene un bloque de pruebas estandarizado. No es llamado obligatoriamente
+ * durante el ciclo de vida real del cliente, pero es ilustrativo de los tipos
+ * y argumentos que requiere cada llamada RPC.
+ *
+ * @param[in] host Puntero a cadena con la dirección/host del servidor RPC.
+ */
 void gestorbiblioteca_1(char *host)
 {
 	CLIENT *clnt;
@@ -362,6 +459,16 @@ void gestorbiblioteca_1(char *host)
 #endif /* DEBUG */
 }
 
+/**
+ * @brief Punto de entrada del cliente RPC al gestor de la biblioteca.
+ *
+ * Crea la comunicación RPC a través de `clnt_create`. Inicia el
+ * bucle del menú principal del usuario.
+ *
+ * @param[in] argc Cantidad de argumentos pasados por consola.
+ * @param[in] argv Array de cadenas desde terminal. Debe incluir `host`.
+ * @return         Retorna 0 si la ejecución finaliza con éxito.
+ */
 int main(int argc, char *argv[])
 {
 
