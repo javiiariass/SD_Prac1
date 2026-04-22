@@ -1,2 +1,7 @@
 .vscode/
 *.pdf
+
+# archivos compilados
+GestorBiblioteca_client
+GestorBiblioteca_server
+*.o
