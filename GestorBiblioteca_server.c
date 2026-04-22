@@ -16,16 +16,17 @@
 #include "autolocale.h"
 
 // ************************************ Variables globales ************************************
-TLibro *Biblioteca = NULL; /**< Vector dinámico de libros */
-int NumLibros = 0;		   /**< Número de libros almacenados en el vector dinámico. */
-int Tama = 0;			   /**< Tamaño del vector dinámico. El incremento será por bloques de 4 libros. */
-int IdAdmin = -1;		   /**< Identificador de Administración enviado al usuario. */
-Cadena NomFichero = "";	   /**< Nombre del último fichero binario que se ha cargado en memoria. */
-int CampoOrdenacion = 0;   /**< Campo de ordenación por el que se ordenarán los libros. */
+TLibro *Biblioteca = NULL;				/**< Vector dinámico de libros */
+int NumLibros = 0;						/**< Número de libros almacenados en el vector dinámico. */
+static const int INCREMENTO_TAMA = 4;	/**< Indica de cuánto en cuánto debe incrementar la variable Tama */
+int Tama = 0;							/**< Tamaño del vector dinámico. El incremento será por bloques de 4 libros. */
+int IdAdmin = -1;						/**< Identificador de Administración enviado al usuario. */
+const Cadena RUTA_FICHEROS = "./data/"; /**< Ruta relativa donde se alojan los ficheros de datos (ej. "./" para la raíz o "./data/" para una subcarpeta). */
+Cadena NomFichero = "";					/**< Nombre del último fichero binario que se ha cargado en memoria. */
+int CampoOrdenacion = 0;				/**< Campo de ordenación por el que se ordenarán los libros. */
 
 // TODO actualizar clave a la dada por el profesor 563498
 static const char *clave_admin = "12"; /**< Constraseña de asministrador solicitada por el servidor */
-
 // *********************************** Funciones auxiliares ***********************************
 
 /**
@@ -39,6 +40,143 @@ static int genera_id_admin()
 	IdAdmin = 1 + rand() % RAND_MAX;
 
 	return IdAdmin;
+}
+
+static bool_t comprueda_id_admin(int id)
+{
+	return (id == IdAdmin && id > 0);
+}
+static bool_t guardar_fichero_datos()
+{
+
+	if(strlen(NomFichero) == 0){
+		printf("No hay ningún fichero abierto. Abra primero una Biblioteca.\n");
+		return FALSE;
+	}
+
+	Cadena rutaCompleta;
+	strcpy(rutaCompleta, RUTA_FICHEROS);
+	strcat(rutaCompleta, NomFichero);
+	printf("Ruta del archivo a guardar: %s", rutaCompleta);
+
+	FILE *archivo = fopen(rutaCompleta, "wb");
+
+	// si falla devuelve NULL
+	if (archivo == NULL)
+	{
+		printf("Error abriendo archivo %s", rutaCompleta);
+		return FALSE;
+	}
+
+	printf("Archivo %s abierto con éxito. Escribiendo...", rutaCompleta);
+
+	// Estructura de archivo
+	// 	| N (num de Libros) | Libro 1 | Libro 2 | ··· | Libro N-1 | Libro N |
+	//  | ----------------- | ------- | ------- | --- | --------- | ------- |
+
+	int resultado_escritura = fwrite(&NumLibros, sizeof(int), 1, archivo);
+	
+	// fwrite devuelve el número de elementos escritos
+	if (resultado_escritura != 1)
+	{
+		printf("Error escribiendo elementos de %s", rutaCompleta);
+		fclose(archivo);
+		return FALSE;
+	}
+	
+	resultado_escritura = fwrite(Biblioteca, sizeof(TLibro), NumLibros, archivo);
+	
+	if (resultado_escritura != NumLibros)
+	{
+		printf("Error escribiendo elementos de %s", rutaCompleta);
+		fclose(archivo);
+		return FALSE;
+	}
+	
+	fclose(archivo);
+	return TRUE;
+	
+}
+static int cargar_fichero_datos(const char *nombreArchivo)
+{
+	// Liberamos vector dinámico si ya hay uno
+	if (Biblioteca != NULL)
+	{
+		free(Biblioteca);
+		Biblioteca = NULL;
+		NumLibros = 0;
+		Tama = 0;
+	}
+	printf("Vector dinámico liberado\n");
+
+	// Cargar nuevo archivo
+
+	Cadena rutaCompleta;
+	strcpy(rutaCompleta, RUTA_FICHEROS);
+	strcat(rutaCompleta, nombreArchivo);
+	printf("Ruta del archivo a abrir: %s", rutaCompleta);
+
+	FILE *archivo = fopen(rutaCompleta, "rb");
+
+	// si falla devuelve NULL
+	if (archivo == NULL)
+	{
+		printf("Error abriendo archivo %s", rutaCompleta);
+		return 0;
+	}
+
+	printf("Archivo %s abierto con éxito. Leyendo...", rutaCompleta);
+
+	// Estructura de archivo
+	// 	| N (num de Libros) | Libro 1 | Libro 2 | ··· | Libro N-1 | Libro N |
+	//  | ----------------- | ------- | ------- | --- | --------- | ------- |
+
+	// variables temporales por si hay fallo al crear vector dinámico
+	int numero_libros, tamanyo_vector;
+	TLibro *Biblioteca_auxiliar;
+
+	int resultado_lectura = fread(&numero_libros, sizeof(int), 1, archivo);
+
+	// fread devuelve el número de elementos leídos.
+	if (resultado_lectura != 1)
+	{
+		printf("Error leyendo elementos de %s", rutaCompleta);
+		fclose(archivo);
+		return 0;
+	}
+
+	tamanyo_vector = ((numero_libros + INCREMENTO_TAMA - 1) / INCREMENTO_TAMA) * INCREMENTO_TAMA;
+	Biblioteca_auxiliar = (TLibro *)malloc(sizeof(TLibro) * tamanyo_vector);
+
+	if (Biblioteca_auxiliar == NULL)
+	{
+		printf("Error reservando memoria para vector de archivo %s", rutaCompleta);
+		fclose(archivo);
+		return 0;
+	}
+
+	resultado_lectura = fread(Biblioteca_auxiliar, sizeof(TLibro), numero_libros, archivo);
+
+	if (resultado_lectura != numero_libros)
+	{
+		printf("Error leyendo elementos de %s", rutaCompleta);
+		free(Biblioteca_auxiliar);
+		fclose(archivo);
+		return 0;
+	}
+
+	printf("Biblioteca %s cargada con exito", rutaCompleta);
+	Biblioteca = Biblioteca_auxiliar;
+	NumLibros = numero_libros;
+	Tama = tamanyo_vector;
+	strcpy(NomFichero, nombreArchivo);
+	fclose(archivo);
+	strcpy(NomFichero, nombreArchivo);
+
+	// TODO llamar a función para ordenar el vector por CampoOrdenacion
+	// si fallo al ordenar devuelvo 0 pero, libero memoria?
+	// uso de qsort?
+	return 1;
 }
 
 // *********************************** Servicios del servidor ***********************************
@@ -115,9 +253,15 @@ int *cargardatos_1_svc(TFichero *argp, struct svc_req *rqstp)
 {
 	static int result;
 
-	/*
-	 * insert server code here
-	 */
+	if (!comprueda_id_admin(argp->Ida))
+	{
+		printf("Id admin incorrecta o No hay administrador válido.\n");
+		result = -1;
+	}
+	else
+	{
+		result = cargar_fichero_datos(argp->NomFile);
+	}
 
 	return &result;
 }
@@ -140,9 +284,15 @@ guardardatos_1_svc(int *argp, struct svc_req *rqstp)
 {
 	static bool_t result;
 
-	/*
-	 * insert server code here
-	 */
+	if (!comprueda_id_admin(*argp))
+	{
+		printf("Id admin incorrecta o No hay administrador válido.\n");
+		result = FALSE;
+	}
+	else
+	{
+		result = guardar_fichero_datos();
+	}
 
 	return &result;
 }
