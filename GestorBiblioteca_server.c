@@ -55,6 +55,45 @@ static bool_t comprueda_id_admin(int id)
 }
 
 /**
+ * @brief Ajusta el tamaño reservado para el vector dinámico de la biblioteca.
+ *
+ * Calcula el tamaño necesario para albergar todos los libros en bloques
+ * de INCREMENTO_TAMA y actualiza la variable global Tama.
+ *
+ * @param[in] incremento TRUE si se va a añadir un libro (incrementar), FALSE si se va a eliminar (disminuir).
+ *
+ * @warning: La variable global NumLibros debe actualizarse (+1 o -1) DESPUÉS
+ * de invocar a este método, una vez se haya modificado el vector.
+ */
+static void redimensiona_biblioteca(bool_t incremento)
+{
+
+	// +1 si se quiere aumentar el tamaño o -1 si se quiere disminuir
+	int numeroIncremento = incremento ? 1 : -1;
+
+	// misma lógica que al cargar archivo -> Nos da el múltiplo de INCREMENTO_TAMA superior al numero de libros
+
+	// NumLibros + 1 o -1 dependiendo de si se incrementa o disminuye la biblioteca
+	int tamanyoNuevo = ((NumLibros + numeroIncremento + INCREMENTO_TAMA - 1) / INCREMENTO_TAMA) * INCREMENTO_TAMA;
+
+	// Si el tamaño nuevo no varía no hace falta redimensionar
+	if (tamanyoNuevo != Tama)
+	{
+		Tama = tamanyoNuevo;
+
+		TLibro *BibliotecaAuxiliar = (TLibro *)realloc(Biblioteca, sizeof(TLibro) * Tama);
+
+		if (BibliotecaAuxiliar == NULL)
+		{
+			printf("Error. No ha sido posible reasignar memoria.\n");
+			return;
+		}
+
+		Biblioteca = BibliotecaAuxiliar;
+	}
+}
+
+/**
  * @brief Guarda la biblioteca actual en el fichero binario asociado.
  *
  * Utiliza el nombre de fichero almacenado en NomFichero y reemplaza su
@@ -206,6 +245,152 @@ static int cargar_fichero_datos(const char *nombreArchivo)
 	return 1;
 }
 
+/**
+ * @brief Busca un libro en la biblioteca por su ISBN.
+ *
+ * Itera sobre el vector dinámico de libros para encontrar una coincidencia
+ * con el ISBN proporcionado.
+ *
+ * @param[in] isbn  ISBN del libro que se desea buscar.
+ * @return          La posición del libro en el array si se encuentra, -1 en caso contrario.
+ */
+static int buscar_libro(const char *isbn)
+{
+
+	for (int i = 0; i < NumLibros; i++)
+	{
+		if (strcmp(isbn, Biblioteca[i].Isbn) == 0)
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+/**
+ * @brief ORIGINAL DEL PROFESOR. Función para comparar dos libros según un campo.
+ *
+ * @warning NO UTILIZAR EN ESTA IMPLEMENTACIÓN. Se mantiene únicamente
+ * por motivos de compatibilidad o por si el profesor la usa en el script de comprobación de servicios.
+ * En su lugar, se utiliza comparar_libros() para llamarla con qsort.
+ *
+ * @param[in] P1     Posición del primer libro en el vector.
+ * @param[in] P2     Posición del segundo libro en el vector.
+ * @param[in] Campo  Campo de ordenación.
+ * @return           TRUE si el libro en P1 es menor que el de P2, FALSE en caso contrario.
+ * @see comparar_libros
+ */
+bool_t EsMenor(int P1, int P2, int Campo)
+{
+	bool_t salida = FALSE;
+	TLibro L1 = Biblioteca[P1];
+	TLibro L2 = Biblioteca[P2];
+
+	switch (Campo)
+	{
+	case 0:
+		salida = strcmp(L1.Isbn, L2.Isbn) < 0 ? TRUE : FALSE;
+		break;
+	case 1:
+		salida = strcmp(L1.Titulo, L2.Titulo) < 0 ? TRUE : FALSE;
+		break;
+	case 2:
+		salida = strcmp(L1.Autor, L2.Autor) < 0 ? TRUE : FALSE;
+		break;
+	case 3:
+		salida = L1.Anio < L2.Anio ? TRUE : FALSE;
+		break;
+	case 4:
+		salida = strcmp(L1.Pais, L2.Pais) < 0 ? TRUE : FALSE;
+		break;
+	case 5:
+		salida = strcmp(L1.Idioma, L2.Idioma) < 0 ? TRUE : FALSE;
+		break;
+	case 6:
+		salida = L1.NoLibros < L2.NoLibros ? TRUE : FALSE;
+		break;
+	case 7:
+		salida = L1.NoPrestados < L2.NoPrestados ? TRUE : FALSE;
+		break;
+	case 8:
+		salida = L1.NoListaEspera < L2.NoListaEspera ? TRUE : FALSE;
+		break;
+	}
+	return salida;
+}
+
+/**
+ * @brief Variante de la función del profesor adaptada para usar qsort().
+ *
+ * Función comparadora que lee la variable global CampoOrdenacion y devuelve
+ * negativo, cero o positivo según convenga, como requiere stdlib.
+ *
+ * @param[in] a  Puntero genérico al primer libro (const void*).
+ * @param[in] b  Puntero genérico al segundo libro (const void*).
+ * @return       <0 si 'a' va antes, 0 si son iguales, >0 si 'a' va después.
+ */
+static int comparar_libros(const void *a, const void *b)
+{
+	// 1. Convertir los punteros genéricos (void*) al tipo de tu estructura
+	const TLibro *libroA = (const TLibro *)a;
+	const TLibro *libroB = (const TLibro *)b;
+	int salida;
+
+	// Como strcmp ya hace eso (0 si iguales, >0 si libroA va despues y <0 si libroA va antes)
+	// Para los enteros hago una resta y obtenemos lo mismo que con strcmp.
+	switch (CampoOrdenacion)
+	{
+	case 0:
+		salida = strcmp(libroA->Isbn, libroB->Isbn);
+		break;
+	case 1:
+		salida = strcmp(libroA->Titulo, libroB->Titulo);
+		break;
+	case 2:
+		salida = strcmp(libroA->Autor, libroB->Autor);
+		break;
+	case 3:
+		salida = libroA->Anio - libroB->Anio;
+		break;
+	case 4:
+		salida = strcmp(libroA->Pais, libroB->Pais);
+		break;
+	case 5:
+		salida = strcmp(libroA->Idioma, libroB->Idioma);
+		break;
+	case 6:
+		salida = libroA->NoLibros - libroB->NoLibros;
+		break;
+	case 7:
+		salida = libroA->NoPrestados - libroB->NoPrestados;
+		break;
+	case 8:
+		salida = libroA->NoListaEspera - libroB->NoListaEspera;
+		break;
+	default: // por si CampoOrdenacion es nulo o algo no contemplado
+		// dejamos todo como está.
+		salida = 0;
+		break;
+	}
+
+	return salida;
+}
+
+
+/**
+ * @brief Ordena el vector dinámico de libros usando qsort.
+ *
+ * Invoca a la función qsort de la biblioteca estándar de C para ordenar 
+ * el vector Biblioteca utilizando la función comparar_libros. El criterio de 
+ * ordenación vendrá dado por la variable global CampoOrdenacion.
+ */
+static void ordena_biblioteca()
+{
+	// qsort(array, numero_de_elementos, tamaño_del_elemento, funcion_comparadora);
+	qsort(Biblioteca, NumLibros, sizeof(TLibro), comparar_libros);
+}
+
 // *********************************** Servicios del servidor ***********************************
 
 /**
@@ -342,9 +527,28 @@ int *nuevolibro_1_svc(TNuevo *argp, struct svc_req *rqstp)
 {
 	static int result;
 
-	/*
-	 * insert server code here
-	 */
+	if (!comprueda_id_admin(argp->Ida))
+	{
+		printf("Id admin incorrecta o No hay administrador válido.\n");
+		result = -1;
+	}
+	else if (buscar_libro(argp->Libro.Isbn) != -1)
+	{
+		printf("El isbn del libro que se está intentando añadir ya está registrado.\n");
+		result = 0;
+	}
+	else
+	{
+		// redimensiona si es necesario para añadir un elemento más al vector
+		redimensiona_biblioteca(TRUE);
+
+		Biblioteca[NumLibros] = argp->Libro;
+		++NumLibros;
+		printf("Libro añadido por admin (id:%d) con exito a la biblioteca.\n", IdAdmin);
+		result = 1;
+	}
+
+	// TODO llamar a ordenar cuando esté implementado
 
 	return &result;
 }
@@ -368,10 +572,50 @@ int *nuevolibro_1_svc(TNuevo *argp, struct svc_req *rqstp)
 int *comprar_1_svc(TComRet *argp, struct svc_req *rqstp)
 {
 	static int result;
+	int posLibro;
 
-	/*
-	 * insert server code here
-	 */
+	if (!comprueda_id_admin(argp->Ida))
+	{
+		printf("Id admin incorrecta o No hay administrador válido.\n");
+		result = -1;
+	}
+	else if ((posLibro = buscar_libro(argp->Isbn)) == -1)
+	{
+		printf("El isbn del libro que se está intentando añadir ya está registrado.\n");
+		result = 0;
+	}
+	else
+	{
+		// obtenermos el Libro para no tener que llamar al vector todo el rato
+		TLibro *libroAuxiliar = &Biblioteca[posLibro];
+
+		// incrementamos el numero de libros
+		libroAuxiliar->NoLibros += argp->NoLibros;
+
+		// Asignamos libros si hay gente en espera
+		if (libroAuxiliar->NoListaEspera != 0)
+		{
+			// Si hay más libros que gente en espera
+			if (argp->NoLibros >= libroAuxiliar->NoListaEspera)
+			{
+				libroAuxiliar->NoLibros -= libroAuxiliar->NoListaEspera;
+				libroAuxiliar->NoPrestados += libroAuxiliar->NoListaEspera;
+				libroAuxiliar->NoListaEspera = 0;
+
+			} // Si hay más gente en espera que libros
+			else
+			{
+				libroAuxiliar->NoListaEspera -= libroAuxiliar->NoLibros;
+				libroAuxiliar->NoPrestados += libroAuxiliar->NoLibros;
+				libroAuxiliar->NoLibros = 0;
+			}
+		}
+
+		printf("stock añadido al libro(isbn: %s) por admin (id:%d) con exito a la biblioteca.\n", argp->Isbn, IdAdmin);
+		result = 1;
+	}
+
+	// TODO llamar a ordenar cuando esté implementado
 
 	return &result;
 }
@@ -396,11 +640,37 @@ int *comprar_1_svc(TComRet *argp, struct svc_req *rqstp)
 int *retirar_1_svc(TComRet *argp, struct svc_req *rqstp)
 {
 	static int result;
+	int posLibro;
 
-	/*
-	 * insert server code here
-	 */
+	if (!comprueda_id_admin(argp->Ida))
+	{
+		printf("Id admin incorrecta o No hay administrador válido.\n");
+		result = -1;
+	}
+	else if ((posLibro = buscar_libro(argp->Isbn)) == -1)
+	{
+		printf("El isbn del libro que se está intentando añadir ya está registrado.\n");
+		result = 0;
+	}
+	else
+	{
+		// obtenermos el Libro para no tener que llamar al vector todo el rato
+		TLibro *libroAuxiliar = &Biblioteca[posLibro];
 
+		if (libroAuxiliar->NoLibros < argp->NoLibros)
+		{
+			printf("Error. No hay suficientes libros para retirar. Stock actual: %d | libros a retirar: %d.\n", libroAuxiliar->NoLibros, argp->NoLibros);
+			result = 2;
+		}
+		else
+		{
+			libroAuxiliar->NoLibros -= argp->NoLibros;
+			printf("stock del libro(isbn: %s) actualizado por admin (id:%d) con exito.\n", argp->Isbn, IdAdmin);
+			result = 1;
+		}
+	}
+
+	// TODO llamar a ordenar cuando esté implementado
 	return &result;
 }
 
@@ -422,9 +692,22 @@ bool_t *ordenar_1_svc(TOrdenacion *argp, struct svc_req *rqstp)
 {
 	static bool_t result;
 
-	/*
-	 * insert server code here
-	 */
+	if (!comprueda_id_admin(argp->Ida))
+	{
+		printf("Id admin incorrecta o No hay administrador válido.\n");
+		result = FALSE;
+	}
+	else
+	{
+		// Si no hay libros, no hay nada que ordenar
+		if (NumLibros != 0)
+		{
+			// asignamos el nuevo campo de ordenación y llamamos al método ordena_biblioteca();
+			CampoOrdenacion = argp->Campo;
+			ordena_biblioteca();
+		}
+		result = TRUE;
+	}
 
 	return &result;
 }
@@ -443,8 +726,6 @@ bool_t *ordenar_1_svc(TOrdenacion *argp, struct svc_req *rqstp)
  */
 int *nlibros_1_svc(int *argp, struct svc_req *rqstp)
 {
-	// static int result = NumLibros;
-
 	return &NumLibros;
 }
 
@@ -464,9 +745,15 @@ int *buscar_1_svc(TConsulta *argp, struct svc_req *rqstp)
 {
 	static int result;
 
-	/*
-	 * insert server code here
-	 */
+	if (!comprueda_id_admin(argp->Ida))
+	{
+		printf("Id admin incorrecta o No hay administrador válido.\n");
+		result = -2;
+	}
+	else
+	{
+		result = buscar_libro(argp->Isbn);
+	}
 
 	return &result;
 }
@@ -490,7 +777,8 @@ TLibro *descargar_1_svc(TPosicion *argp, struct svc_req *rqstp)
 	static TLibro result;
 
 	// Comprobar si la posición es correcta
-	if (argp->Pos < 0 || argp->Pos >= NumLibros) {
+	if (argp->Pos < 0 || argp->Pos >= NumLibros)
+	{
 		strcpy(result.Isbn, "????");
 		strcpy(result.Titulo, "????");
 		strcpy(result.Autor, "????");
@@ -500,10 +788,13 @@ TLibro *descargar_1_svc(TPosicion *argp, struct svc_req *rqstp)
 		result.NoLibros = 0;
 		result.NoPrestados = 0;
 		result.NoListaEspera = 0;
-	} else {
+	}
+	else
+	{
 		result = Biblioteca[argp->Pos];
 
-		if (!comprueda_id_admin(argp->Ida)) {
+		if (!comprueda_id_admin(argp->Ida))
+		{
 			result.NoPrestados = 0;
 			result.NoListaEspera = 0;
 		}
@@ -516,7 +807,7 @@ TLibro *descargar_1_svc(TPosicion *argp, struct svc_req *rqstp)
  * @brief Presta un libro a un usuario.
  *
  * Presta el libro de la posición indicada. Si hay ejemplares disponibles,
- * reduce el disponible y aumenta prestados. Si no, añade al usuario a
+ * reduce el disponible y aumenta prestados. Si no, añade usuario a
  * lista de espera. Reordena el vector al finalizar. No pide verificación del Ida.
  *
  * @param[in] argp   Puntero a estructura TPosicion con Pos (y un Ida irrelevante/anónimo).
@@ -526,15 +817,37 @@ TLibro *descargar_1_svc(TPosicion *argp, struct svc_req *rqstp)
  *                   -  0: No hay libros, usuario puesto en lista de espera.
  *                   -  1: Libro prestado correctamente.
  *
+ * @warning Asumo que la Pos pasada por parámetro va de [0 a NoLibros-1]
  * @warning El valor devuelto apunta a memoria estática. No liberar.
  */
 int *prestar_1_svc(TPosicion *argp, struct svc_req *rqstp)
 {
 	static int result;
 
-	/*
-	 * insert server code here
-	 */
+	// Early return para posición incorrecta
+	if (argp->Pos < 0 || argp->Pos >= NumLibros)
+	{
+		printf("Error. Se está pasando una posición incorrecta en el servicio `prestar`.\n");
+		result = -1;
+		return &result;
+	}
+
+	// obtenermos el Libro para no tener que llamar al vector todo el rato
+	TLibro *libroAuxiliar = &Biblioteca[argp->Pos];
+
+	if (libroAuxiliar->NoLibros == 0)
+	{
+		++libroAuxiliar->NoListaEspera;
+		result = 0;
+	}
+	else
+	{
+		--libroAuxiliar->NoLibros;
+		++libroAuxiliar->NoPrestados;
+		result = 1;
+	}
+
+	// TODO llamar a ordenar_1_svc()
 
 	return &result;
 }
@@ -552,7 +865,7 @@ int *prestar_1_svc(TPosicion *argp, struct svc_req *rqstp)
  *                   - -1: La posición indicada no está dentro de los límites del vector.
  *                   -  0: Libro devuelto y entregado a un usuario de la lista de espera.
  *                   -  1: Libro devuelto, aumentando el número de ejemplares disponibles.
- *                   -  2: Error, no se puede devolver porque ni está prestado ni hay espera.
+ *                   -  2: Error, no se puede devolver porque no está prestado.
  *
  * @warning El valor devuelto apunta a memoria estática. No liberar.
  */
@@ -560,9 +873,38 @@ int *devolver_1_svc(TPosicion *argp, struct svc_req *rqstp)
 {
 	static int result;
 
-	/*
-	 * insert server code here
-	 */
+	// Early return para posición incorrecta
+	if (argp->Pos < 0 || argp->Pos >= NumLibros)
+	{
+		printf("Error. Se está pasando una posición incorrecta en el servicio `devolver`.\n");
+		result = -1;
+		return &result;
+	}
+
+	// obtenermos el Libro para no tener que llamar al vector todo el rato
+	TLibro *libroAuxiliar = &Biblioteca[argp->Pos];
+
+	// En el enunciado dice "El libro no se puede devolver, porque no hay ni usuarios en lista de espera ni libros
+	//  prestados"
+	// Si no hay libros prestados, debería dar igual si hay, o no, lista de espera, ¿no?
+	// En caso de devolver 2, solo contemplo que no haya libros prestados
+	if (libroAuxiliar->NoPrestados < 1)
+	{
+		result = 2;
+	}
+	else if (libroAuxiliar->NoListaEspera > 0)
+	{
+		--libroAuxiliar->NoListaEspera;
+		result = 0;
+	}
+	else
+	{
+		++libroAuxiliar->NoLibros;
+		--libroAuxiliar->NoPrestados;
+		result = 1;
+	}
+
+	// TODO llamar a ordenar_1_svc()
 
 	return &result;
 }
