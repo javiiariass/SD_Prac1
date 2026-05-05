@@ -9,6 +9,14 @@
  * @author Javi
  */
 
+/**
+ * @mainpage SD Servicio RPC - Documentación
+ *
+ * - @ref GestorBiblioteca_server.c "Documentación del Servidor (ver funciones)"
+ * - @ref GestorBiblioteca_client.c "Documentación del Cliente (ver funciones)"
+ *
+ */
+
 #include "GestorBiblioteca.h"
 #include <string.h>
 
@@ -407,7 +415,6 @@ bool_t EsMenor(int P1, int P2, int Campo)
 	}
 	return salida;
 }
-
 
 // *********************************** Servicios del servidor ***********************************
 

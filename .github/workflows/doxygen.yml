@@ -1,0 +1,35 @@
+name: Deploy Doxygen to GitHub Pages
+
+# Este script se ejecuta cada vez que haces un push a la rama 'main'
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    # Le damos permiso explícito para escribir en el repositorio
+    permissions:
+      contents: write 
+
+    steps:
+      # 1. Clona tu código en el servidor de GitHub
+      - name: Checkout código fuente
+        uses: actions/checkout@v4
+
+      # 2. Instala Doxygen en el servidor
+      - name: Instalar Doxygen
+        run: sudo apt-get update && sudo apt-get install -y doxygen
+
+      # 3. Ejecuta Doxygen
+      - name: Generar documentación
+        run: doxygen docs/Doxyfile 
+
+      # 4. Sube la carpeta generada a la rama gh-pages
+      - name: Desplegar en GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./html
