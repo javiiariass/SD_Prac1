@@ -119,7 +119,7 @@ void Formatea(char *Salida, const char *Texto, int Ancho, char Caracter)
 
 	while (Texto[l] != '\0')
 	{
-		if ((unsigned char)Texto[l] > 128)
+		if ((unsigned char)Texto[l] > 128) 
 			c++;
 		l++;
 	}
@@ -387,7 +387,7 @@ static void maneja_carga_datos(CLIENT *clnt)
 	TFichero parametros_fichero;
 
 	// pedimos nombre fichero
-	printf("Introduzca nombre del fichero a cargar: ");
+	printf("Introduzca nombre del fichero a cargar (incluyendo extensión: Biblioteca.cdat): ");
 	scanf(" %s", parametros_fichero.NomFile);
 
 	// Si se llama desde menú admin no debería 'ida' ser -1 -> no lo controlo
@@ -466,16 +466,16 @@ static void maneja_nuevo_libro(CLIENT *clnt)
 	printf("Introduce el Isbn: ");
 	scanf(" %s", libro.Isbn);
 	printf("Introduce el Autor: ");
-	scanf("%[^\n]", libro.Autor); // lee todo hasta retorno de carro
+	scanf(" %[^\n]", libro.Autor); // lee todo hasta retorno de carro
 	printf("Introduce el Título: ");
-	scanf("%[^\n]", libro.Titulo);
+	scanf(" %[^\n]", libro.Titulo);
 	printf("Introduce el Año: ");
 	scanf("%d", &libro.Anio);
 	printf("Introduce el País: ");
-	scanf("%[^\n]", libro.Pais);
+	scanf(" %[^\n]", libro.Pais);
 	printf("Introduce el Idioma: ");
 	scanf("%s", libro.Idioma);
-	printf("Introduce el Número de Libros Inidial: ");
+	printf("Introduce el Número de Libros Inicial: ");
 	scanf("%d", &libro.NoLibros);
 	libro.NoListaEspera = 0;
 	libro.NoPrestados = 0;
@@ -574,7 +574,7 @@ static void maneja_compra_libro(CLIENT *clnt)
 		strcpy(numero_libros_consulta.Isbn, libro->Isbn);
 
 		printf("Introduce Número de Libros comprados: ");
-		scanf("%d", &numero_libros_consulta.NoLibros);
+		scanf(" %d", &numero_libros_consulta.NoLibros);
 
 		// llamamos al servicio
 		resultado = comprar_1(&numero_libros_consulta, clnt);
@@ -626,7 +626,7 @@ static void maneja_retira_libro(CLIENT *clnt)
 	// Buscamos libro
 	TConsulta consulta;
 	printf("Introduce Isbn a Buscar: ");
-	scanf("%s", consulta.Isbn);
+	scanf(" %s", consulta.Isbn);
 	consulta.Ida = ida;
 
 	int *posicion = buscar_1(&consulta, clnt);
@@ -671,7 +671,7 @@ static void maneja_retira_libro(CLIENT *clnt)
 		strcpy(numero_libros_consulta.Isbn, libro->Isbn);
 
 		printf("Introduce Número de unidades a retirar: ");
-		scanf("%d", &numero_libros_consulta.NoLibros);
+		scanf(" %d", &numero_libros_consulta.NoLibros);
 
 		// llamamos al servicio
 		resultado = retirar_1(&numero_libros_consulta, clnt);
@@ -1038,8 +1038,8 @@ static void maneja_listar_libros(CLIENT *clnt)
 		// Muestra cabecera en el primer libro
 		MostrarLibro(libro, i, (i == 0) ? TRUE : FALSE);
 	}
-
-	MostrarAviso("\n");
+	printf("\n");
+	// MostrarAviso("\n");
 }
 
 /**
@@ -1089,6 +1089,7 @@ static void maneja_menu_admin(CLIENT *clnt)
 			break;
 		case 0:
 			maneja_desconexion(clnt);
+			return; //volvemos sin pasar por el pause (para que no haya dos)
 			break;
 		default:
 			break;
@@ -1111,7 +1112,7 @@ static void maneja_conexion_admin(CLIENT *clnt)
 	int *resultado;
 	// pedir clave
 	Cadena clave;
-	printf("Introduzca la contraseña de asdministrador: ");
+	printf("Introduzca la contraseña de administrador: ");
 	scanf(" %s", clave);
 
 	// para no tener que estar introduciento todo el rato
@@ -1124,10 +1125,10 @@ static void maneja_conexion_admin(CLIENT *clnt)
 	switch (*resultado)
 	{
 	case -1:
-		MostrarAviso("Error. Ya hay un usuario identificado como administrador.\n");
+		printf("Error. Ya hay un usuario identificado como administrador.\n");
 		break;
 	case -2:
-		MostrarAviso("Error. Contraseña incorrecta.\n");
+		printf("Error. Contraseña incorrecta.\n");
 		break;
 	default:
 		MostrarAviso("Accediendo a menú administración.\n");
@@ -1265,7 +1266,7 @@ static void test_automatico(CLIENT *clnt)
 	int *res;
 
 	// 1. Identificarse como admin
-	Cadena clave = "12";
+	Cadena clave = "563498";
 	res = conexion_1(clave, clnt);
 	if (!comprueba_llamada(res, clnt))
 		return;
@@ -1365,7 +1366,6 @@ static void test_automatico(CLIENT *clnt)
 	}
 
 	printf("--- FIN DEL TEST AUTOMÁTICO ---\n");
-	Pause;
 }
 
 /**

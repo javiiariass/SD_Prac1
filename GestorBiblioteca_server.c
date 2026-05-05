@@ -180,7 +180,6 @@ static void ordena_biblioteca()
  */
 static bool_t guardar_fichero_datos()
 {
-
 	if (strlen(NomFichero) == 0)
 	{
 		printf("No hay ningún fichero abierto. Abra primero una Biblioteca.\n");
@@ -190,18 +189,18 @@ static bool_t guardar_fichero_datos()
 	Cadena rutaCompleta;
 	strcpy(rutaCompleta, RUTA_FICHEROS);
 	strcat(rutaCompleta, NomFichero);
-	printf("Ruta del archivo a guardar: %s", rutaCompleta);
+	printf("Ruta del archivo a guardar: %s\n", rutaCompleta);
 
 	FILE *archivo = fopen(rutaCompleta, "wb");
 
 	// si falla devuelve NULL
 	if (archivo == NULL)
 	{
-		printf("Error abriendo archivo %s", rutaCompleta);
+		printf("Error abriendo archivo %s\n", rutaCompleta);
 		return FALSE;
 	}
 
-	printf("Archivo %s abierto con éxito. Escribiendo...", rutaCompleta);
+	printf("Archivo %s abierto con éxito. Escribiendo...\n", rutaCompleta);
 
 	// Estructura de archivo
 	// 	| N (num de Libros) | Libro 1 | Libro 2 | ··· | Libro N-1 | Libro N |
@@ -212,7 +211,7 @@ static bool_t guardar_fichero_datos()
 	// fwrite devuelve el número de elementos escritos
 	if (resultado_escritura != 1)
 	{
-		printf("Error escribiendo elementos de %s", rutaCompleta);
+		printf("Error escribiendo elementos de %s\n", rutaCompleta);
 		fclose(archivo);
 		return FALSE;
 	}
@@ -221,7 +220,7 @@ static bool_t guardar_fichero_datos()
 
 	if (resultado_escritura != NumLibros)
 	{
-		printf("Error escribiendo elementos de %s", rutaCompleta);
+		printf("Error escribiendo elementos de %s\n", rutaCompleta);
 		fclose(archivo);
 		return FALSE;
 	}
@@ -242,15 +241,6 @@ static bool_t guardar_fichero_datos()
  */
 static int cargar_fichero_datos(const char *nombreArchivo)
 {
-	// Liberamos vector dinámico si ya hay uno
-	if (Biblioteca != NULL)
-	{
-		free(Biblioteca);
-		Biblioteca = NULL;
-		NumLibros = 0;
-		Tama = 0;
-	}
-	printf("Vector dinámico liberado\n");
 
 	// Cargar nuevo archivo
 
@@ -306,6 +296,16 @@ static int cargar_fichero_datos(const char *nombreArchivo)
 		free(Biblioteca_auxiliar);
 		fclose(archivo);
 		return 0;
+	}
+
+	// Si no ha habido ningún error. Liberamos vector anterior (si había)
+	if (Biblioteca != NULL)
+	{
+		free(Biblioteca);
+		Biblioteca = NULL;
+		NumLibros = 0;
+		Tama = 0;
+		printf("Vector dinámico anterior liberado\n");
 	}
 
 	printf("Biblioteca %s cargada con exito\n", rutaCompleta);
@@ -569,7 +569,7 @@ int *nuevolibro_1_svc(TNuevo *argp, struct svc_req *rqstp)
 
 		Biblioteca[NumLibros] = argp->Libro;
 		++NumLibros;
-		printf("Libro añadido por admin (id:%d) con exito a la biblioteca.\n", IdAdmin);
+		printf("Libro añadido (isbn: %s) por admin (id:%d) con exito a la biblioteca.\n", argp->Libro.Isbn, IdAdmin);
 		result = 1;
 	}
 
@@ -623,6 +623,7 @@ int *comprar_1_svc(TComRet *argp, struct svc_req *rqstp)
 			// Si hay más libros que gente en espera
 			if (argp->NoLibros >= libroAuxiliar->NoListaEspera)
 			{
+				printf("Asignados %d libros a usuarios de la lista de espera.\n",libroAuxiliar->NoListaEspera);
 				libroAuxiliar->NoLibros -= libroAuxiliar->NoListaEspera;
 				libroAuxiliar->NoPrestados += libroAuxiliar->NoListaEspera;
 				libroAuxiliar->NoListaEspera = 0;
@@ -630,6 +631,7 @@ int *comprar_1_svc(TComRet *argp, struct svc_req *rqstp)
 			} // Si hay más gente en espera que libros
 			else
 			{
+				printf("Asignados %d libros a usuarios de la lista de espera.\n",libroAuxiliar->NoLibros);
 				libroAuxiliar->NoListaEspera -= libroAuxiliar->NoLibros;
 				libroAuxiliar->NoPrestados += libroAuxiliar->NoLibros;
 				libroAuxiliar->NoLibros = 0;
