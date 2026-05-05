@@ -25,8 +25,7 @@ const Cadena RUTA_FICHEROS = "./data/"; /**< Ruta relativa donde se alojan los f
 Cadena NomFichero = "";					/**< Nombre del último fichero binario que se ha cargado en memoria. */
 int CampoOrdenacion = 0;				/**< Campo de ordenación por el que se ordenarán los libros. */
 
-// TODO actualizar clave a la dada por el profesor 563498
-static const char *clave_admin = "12"; /**< Constraseña de asministrador solicitada por el servidor */
+static const char *clave_admin = "563498"; /**< Constraseña de asministrador solicitada por el servidor */
 // *********************************** Funciones auxiliares ***********************************
 
 /**
@@ -91,6 +90,76 @@ static void redimensiona_biblioteca(bool_t incremento)
 
 		Biblioteca = BibliotecaAuxiliar;
 	}
+}
+
+/**
+ * @brief Variante de la función del profesor adaptada para usar qsort().
+ *
+ * Función comparadora que lee la variable global CampoOrdenacion y devuelve
+ * negativo, cero o positivo según convenga, como requiere stdlib.
+ *
+ * @param[in] a  Puntero genérico al primer libro (const void*).
+ * @param[in] b  Puntero genérico al segundo libro (const void*).
+ * @return       <0 si 'a' va antes, 0 si son iguales, >0 si 'a' va después.
+ */
+static int comparar_libros(const void *a, const void *b)
+{
+	// 1. Convertir los punteros genéricos (void*) al tipo de tu estructura
+	const TLibro *libroA = (const TLibro *)a;
+	const TLibro *libroB = (const TLibro *)b;
+	int salida;
+
+	// Como strcmp ya hace eso (0 si iguales, >0 si libroA va despues y <0 si libroA va antes)
+	// Para los enteros hago una resta y obtenemos lo mismo que con strcmp.
+	switch (CampoOrdenacion)
+	{
+	case 0:
+		salida = strcmp(libroA->Isbn, libroB->Isbn);
+		break;
+	case 1:
+		salida = strcmp(libroA->Titulo, libroB->Titulo);
+		break;
+	case 2:
+		salida = strcmp(libroA->Autor, libroB->Autor);
+		break;
+	case 3:
+		salida = libroA->Anio - libroB->Anio;
+		break;
+	case 4:
+		salida = strcmp(libroA->Pais, libroB->Pais);
+		break;
+	case 5:
+		salida = strcmp(libroA->Idioma, libroB->Idioma);
+		break;
+	case 6:
+		salida = libroA->NoLibros - libroB->NoLibros;
+		break;
+	case 7:
+		salida = libroA->NoPrestados - libroB->NoPrestados;
+		break;
+	case 8:
+		salida = libroA->NoListaEspera - libroB->NoListaEspera;
+		break;
+	default: // por si CampoOrdenacion es nulo o algo no contemplado
+		// dejamos todo como está.
+		salida = 0;
+		break;
+	}
+
+	return salida;
+}
+
+/**
+ * @brief Ordena el vector dinámico de libros usando qsort.
+ *
+ * Invoca a la función qsort de la biblioteca estándar de C para ordenar
+ * el vector Biblioteca utilizando la función comparar_libros. El criterio de
+ * ordenación vendrá dado por la variable global CampoOrdenacion.
+ */
+static void ordena_biblioteca()
+{
+	// qsort(array, numero_de_elementos, tamaño_del_elemento, funcion_comparadora);
+	qsort(Biblioteca, NumLibros, sizeof(TLibro), comparar_libros);
 }
 
 /**
@@ -237,11 +306,30 @@ static int cargar_fichero_datos(const char *nombreArchivo)
 	Tama = tamanyo_vector;
 	strcpy(NomFichero, nombreArchivo);
 	fclose(archivo);
-	strcpy(NomFichero, nombreArchivo);
 
-	// TODO llamar a función para ordenar el vector por CampoOrdenacion
-	// si fallo al ordenar devuelvo 0 pero, libero memoria?
-	// uso de qsort?
+	// al cargar un fichero puede haber libros disponibles y lista de espera. Los asignamos directamente
+	for (int i = 0; i < NumLibros; i++)
+	{
+		TLibro *libro = &Biblioteca[i];
+		if (libro->NoListaEspera > 0 && libro->NoLibros > 0)
+		{
+			if (libro->NoLibros >= libro->NoListaEspera)
+			{
+				libro->NoLibros -= libro->NoListaEspera;
+				libro->NoPrestados += libro->NoListaEspera;
+				libro->NoListaEspera = 0;
+			}
+			else
+			{
+				libro->NoListaEspera -= libro->NoLibros;
+				libro->NoPrestados += libro->NoLibros;
+				libro->NoLibros = 0;
+			}
+		}
+	}
+
+	ordena_biblioteca();
+
 	return 1;
 }
 
@@ -320,76 +408,6 @@ bool_t EsMenor(int P1, int P2, int Campo)
 	return salida;
 }
 
-/**
- * @brief Variante de la función del profesor adaptada para usar qsort().
- *
- * Función comparadora que lee la variable global CampoOrdenacion y devuelve
- * negativo, cero o positivo según convenga, como requiere stdlib.
- *
- * @param[in] a  Puntero genérico al primer libro (const void*).
- * @param[in] b  Puntero genérico al segundo libro (const void*).
- * @return       <0 si 'a' va antes, 0 si son iguales, >0 si 'a' va después.
- */
-static int comparar_libros(const void *a, const void *b)
-{
-	// 1. Convertir los punteros genéricos (void*) al tipo de tu estructura
-	const TLibro *libroA = (const TLibro *)a;
-	const TLibro *libroB = (const TLibro *)b;
-	int salida;
-
-	// Como strcmp ya hace eso (0 si iguales, >0 si libroA va despues y <0 si libroA va antes)
-	// Para los enteros hago una resta y obtenemos lo mismo que con strcmp.
-	switch (CampoOrdenacion)
-	{
-	case 0:
-		salida = strcmp(libroA->Isbn, libroB->Isbn);
-		break;
-	case 1:
-		salida = strcmp(libroA->Titulo, libroB->Titulo);
-		break;
-	case 2:
-		salida = strcmp(libroA->Autor, libroB->Autor);
-		break;
-	case 3:
-		salida = libroA->Anio - libroB->Anio;
-		break;
-	case 4:
-		salida = strcmp(libroA->Pais, libroB->Pais);
-		break;
-	case 5:
-		salida = strcmp(libroA->Idioma, libroB->Idioma);
-		break;
-	case 6:
-		salida = libroA->NoLibros - libroB->NoLibros;
-		break;
-	case 7:
-		salida = libroA->NoPrestados - libroB->NoPrestados;
-		break;
-	case 8:
-		salida = libroA->NoListaEspera - libroB->NoListaEspera;
-		break;
-	default: // por si CampoOrdenacion es nulo o algo no contemplado
-		// dejamos todo como está.
-		salida = 0;
-		break;
-	}
-
-	return salida;
-}
-
-
-/**
- * @brief Ordena el vector dinámico de libros usando qsort.
- *
- * Invoca a la función qsort de la biblioteca estándar de C para ordenar 
- * el vector Biblioteca utilizando la función comparar_libros. El criterio de 
- * ordenación vendrá dado por la variable global CampoOrdenacion.
- */
-static void ordena_biblioteca()
-{
-	// qsort(array, numero_de_elementos, tamaño_del_elemento, funcion_comparadora);
-	qsort(Biblioteca, NumLibros, sizeof(TLibro), comparar_libros);
-}
 
 // *********************************** Servicios del servidor ***********************************
 
@@ -548,7 +566,7 @@ int *nuevolibro_1_svc(TNuevo *argp, struct svc_req *rqstp)
 		result = 1;
 	}
 
-	// TODO llamar a ordenar cuando esté implementado
+	ordena_biblioteca();
 
 	return &result;
 }
@@ -615,7 +633,7 @@ int *comprar_1_svc(TComRet *argp, struct svc_req *rqstp)
 		result = 1;
 	}
 
-	// TODO llamar a ordenar cuando esté implementado
+	ordena_biblioteca();
 
 	return &result;
 }
@@ -670,7 +688,8 @@ int *retirar_1_svc(TComRet *argp, struct svc_req *rqstp)
 		}
 	}
 
-	// TODO llamar a ordenar cuando esté implementado
+	ordena_biblioteca();
+
 	return &result;
 }
 
@@ -847,7 +866,7 @@ int *prestar_1_svc(TPosicion *argp, struct svc_req *rqstp)
 		result = 1;
 	}
 
-	// TODO llamar a ordenar_1_svc()
+	ordena_biblioteca();
 
 	return &result;
 }
@@ -904,7 +923,7 @@ int *devolver_1_svc(TPosicion *argp, struct svc_req *rqstp)
 		result = 1;
 	}
 
-	// TODO llamar a ordenar_1_svc()
+	ordena_biblioteca();
 
 	return &result;
 }
