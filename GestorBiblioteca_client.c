@@ -1110,12 +1110,12 @@ static void maneja_conexion_admin(CLIENT *clnt)
 {
 	int *resultado;
 	// pedir clave
-	// Cadena clave;
-	// printf("Introduzca la contraseña de asdministrador: ");
-	// scanf("%s", clave);
+	Cadena clave;
+	printf("Introduzca la contraseña de asdministrador: ");
+	scanf(" %s", clave);
 
-	// TODO descomentar solicitar por teclado contraseña cuando todo esté acabado
-	Cadena clave = "563498";
+	// para no tener que estar introduciento todo el rato
+	// Cadena clave = "563498";
 
 	resultado = conexion_1(clave, clnt);
 	if (!comprueba_llamada(resultado, clnt))
