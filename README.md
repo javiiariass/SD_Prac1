@@ -56,6 +56,9 @@ Por tanto, sería algo así:
 
 También he usado `strncpy` que hace lo mismo que `strcpy` pero indicandole un valor máximo por si el texto a copiar ocupa más que el tamaño de destino.
 
+> [!WARNING] 
+> La función `Formatea` que nos has proporcionado rompe un poco el formato  con esta función -> los códigos ascii también los cuenta para el tamaño de `Texto` (aunque realmente no se muestren). Pueden descuadrarse un poco algunos elementos al buscar.
+
 ##### OR binario
 
 He usado `|=`: es un OR binario -> para bool_t, así no pasa de TRUE si le sumas otro TRUE (bool_t son enteros al final).
@@ -158,4 +161,6 @@ switch (CampoOrdenacion) // El del servidor directamente
 
 En la función que carga los datos del binario `.cdat` a memoria en el servidor, he implementado que se asignen automáticamente los libros que haya disponibles si hay lista de espera en esos libros.
 
-Si el fichero cargado tiene información inconsistente (por ejemplo, un libro que tenga a la vez ejemplares disponibles (`NoLibros > 0`) y gente en lista de espera (`NoListaEspera > 0`), el servidor purga esa inconsistencia distribuyendo los libros disponibles a los usuarios en espera antes de empezar a servir peticiones.
+Si el fichero cargado tiene información inconsistente (por ejemplo, un libro que tenga a la vez ejemplares disponibles (`NoLibros > 0`) y gente en lista de espera (`NoListaEspera > 0`)), el servidor purga esa inconsistencia distribuyendo los libros disponibles a los usuarios en espera antes de empezar a servir peticiones.
+
+Además, el método de carga de datos usa un array temporal de libros en vez de sobreescribir el vector principal directamente. Solo una vez se haya podido reservar la memoria temporal (`malloc`) y cargar (`fread`) exitosamente todo el fichero nuevo, se procede a liberar el vector antiguo y reasignarlo. Con esto evitamos liberar el vector anterior si ocurre un problema y no podemos abrir el nuevo.
