@@ -623,7 +623,7 @@ int *comprar_1_svc(TComRet *argp, struct svc_req *rqstp)
 			// Si hay más libros que gente en espera
 			if (argp->NoLibros >= libroAuxiliar->NoListaEspera)
 			{
-				printf("Asignados %d libros a usuarios de la lista de espera.\n",libroAuxiliar->NoListaEspera);
+				printf("Asignados %d libros a usuarios de la lista de espera.\n", libroAuxiliar->NoListaEspera);
 				libroAuxiliar->NoLibros -= libroAuxiliar->NoListaEspera;
 				libroAuxiliar->NoPrestados += libroAuxiliar->NoListaEspera;
 				libroAuxiliar->NoListaEspera = 0;
@@ -631,7 +631,7 @@ int *comprar_1_svc(TComRet *argp, struct svc_req *rqstp)
 			} // Si hay más gente en espera que libros
 			else
 			{
-				printf("Asignados %d libros a usuarios de la lista de espera.\n",libroAuxiliar->NoLibros);
+				printf("Asignados %d libros a usuarios de la lista de espera.\n", libroAuxiliar->NoLibros);
 				libroAuxiliar->NoListaEspera -= libroAuxiliar->NoLibros;
 				libroAuxiliar->NoPrestados += libroAuxiliar->NoLibros;
 				libroAuxiliar->NoLibros = 0;

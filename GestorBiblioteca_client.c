@@ -59,8 +59,7 @@ int MenuPrincipal()
 		if ((Salida < '0' || Salida > '4') && Salida != '9')
 			MostrarAviso("\n\n *** Error en la entrada de Datos.***\n\n");
 	} while ((Salida < '0' || Salida > '4') && Salida != '9');
-	
-	
+
 	// Pasamos el char a entero
 	return ((int)Salida - '0');
 }
@@ -95,7 +94,7 @@ int MenuAdministracion()
 		if (Salida < '0' || Salida > '8')
 			MostrarAviso("\n\n *** Error en la entrada de Datos.***\n\n");
 	} while (Salida < '0' || Salida > '8');
-	return ((int)Salida-'0');
+	return ((int)Salida - '0');
 }
 
 // ******************************************** funciones auxiliares ********************************************
@@ -119,7 +118,7 @@ void Formatea(char *Salida, const char *Texto, int Ancho, char Caracter)
 
 	while (Texto[l] != '\0')
 	{
-		if ((unsigned char)Texto[l] > 128) 
+		if ((unsigned char)Texto[l] > 128)
 			c++;
 		l++;
 	}
@@ -220,7 +219,7 @@ bool_t formatea_texto(char *campo_original, char *texto_buscado)
  * @param[in] Campo Código que indica el campo a buscar: 'i', 't', 'a', 'p', 'd' o '*'.
  * @return TRUE si la búsqueda encontró alguna coincidencia, FALSE si no.
  */
-bool_t comprobar_formateado(TLibro *L, char* Texto, char Campo)
+bool_t comprobar_formateado(TLibro *L, char *Texto, char Campo)
 {
 	bool_t Encontrado = FALSE;
 
@@ -809,7 +808,6 @@ static bool_t ejecutar_busqueda(CLIENT *clnt, char *texto_busqueda,
 	}
 }
 
-
 /**
  * @brief Lee los criterios de búsqueda del usuario y ejecuta la búsqueda.
  *
@@ -1089,13 +1087,13 @@ static void maneja_menu_admin(CLIENT *clnt)
 			break;
 		case 0:
 			maneja_desconexion(clnt);
-			return; //volvemos sin pasar por el pause (para que no haya dos)
+			return; // volvemos sin pasar por el pause (para que no haya dos)
 			break;
 		default:
 			break;
 		}
 
-	Pause;
+		Pause;
 	} while (opcion != 0);
 }
 
