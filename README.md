@@ -56,8 +56,8 @@ Por tanto, sería algo así:
 
 También he usado `strncpy` que hace lo mismo que `strcpy` pero indicandole un valor máximo por si el texto a copiar ocupa más que el tamaño de destino.
 
-> [!WARNING] 
-> La función `Formatea` que nos has proporcionado rompe un poco el formato  con esta función -> los códigos ascii también los cuenta para el tamaño de `Texto` (aunque realmente no se muestren). Pueden descuadrarse un poco algunos elementos al buscar.
+> [!WARNING]
+> La función `Formatea` que nos has proporcionado rompe un poco el formato con esta función -> los códigos ascii también los cuenta para el tamaño de `Texto` (aunque realmente no se muestren). Pueden descuadrarse un poco algunos elementos al buscar.
 
 ##### OR binario
 
@@ -82,6 +82,9 @@ if (formatea_texto(L->Idioma, Texto)) Encontrado = TRUE;
 ```
 
 ### Servidor
+
+> [!WARNING]
+> No hay manejo de números negativos en compras o retiradas. Puede dar lugar a errores.
 
 #### Servicio `devolver`
 
