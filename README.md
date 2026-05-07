@@ -2,7 +2,7 @@
 
 En [este enlace](https://javiiariass.github.io/SD_Prac1) está la documentación que se ha generado de los servicios y funciones usadas en esta práctica
 
->[!INFO]
+>[!NOTE]
 >Los ficheros de datos van ubicados dentro de la carpeta `data`.
 >Si se quiere usar la raiz del espacio de trabajo, cambiar ruta en la constante definida (**linea 32 del .server**).
 
